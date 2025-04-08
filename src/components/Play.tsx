@@ -1,16 +1,15 @@
 import React from 'react'
-import { Fab, Icon, Page, List, ListItem, AlertDialog, Button } from 'react-onsenui';
+import { Fab, Icon, Page, List, ListItem, ListTitle, AlertDialog, Button, ToolbarButton, Dialog, Checkbox, Input } from 'react-onsenui';
 import { connect, ConnectedProps } from 'react-redux'
 
-import { togglePlayerAlive, fullReset } from '../reducers/game'
+import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID } from '../reducers/game'
 import { navTo } from '../reducers/ui'
 import Toolbar from './Toolbar';
+import { availableIcons } from '../config';
 
-
-const mapStateToProps = (state: RootState) => ({ players: state.game.players, availableRoles: state.game.availableRoles })
-const mapDispatch = { togglePlayerAlive, fullReset, navTo }
+const mapStateToProps = (state: RootState) => ({ players: state.game.players, availableRoles: state.game.availableRoles, availableEffects: state.game.availableEffects })
+const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, createEffect, deleteEffect }
 const connector = connect(mapStateToProps, mapDispatch)
-
 
 const pStyle: React.CSSProperties = {
   textAlign: 'center',
@@ -18,12 +17,12 @@ const pStyle: React.CSSProperties = {
 };
 
 type PlayProps = ConnectedProps<typeof connector>
-type PlayState = { endAlertIsOpen: boolean }
+type PlayState = { endAlertIsOpen: boolean, playerDetailsAreOpen: boolean, newEffectFormIsOpen: boolean, selectedPlayer: number }
 
 class Play extends React.Component<PlayProps, PlayState> {
   constructor(props: PlayProps) {
     super(props)
-    this.state = { endAlertIsOpen: false }
+    this.state = { endAlertIsOpen: false, playerDetailsAreOpen: false, newEffectFormIsOpen: false, selectedPlayer: 0 }
   }
 
   endGameOk() {
@@ -36,9 +35,40 @@ class Play extends React.Component<PlayProps, PlayState> {
     this.setState({ endAlertIsOpen: false });
   }
 
+  playerDetailsClose() {
+    this.setState({ playerDetailsAreOpen: false })
+  }
+
+  newEffectFormClose() {
+    this.setState({ playerDetailsAreOpen: true, newEffectFormIsOpen: false })
+  }
+
+  submitNewEffect(event: React.SyntheticEvent) {
+    event.preventDefault()
+    this.newEffectFormClose()
+    const target = event.target as typeof event.target & { newEffectName: { value: string }, newEffectIcon: { value: string } }
+    const effect = { name: target.newEffectName.value, icon: target.newEffectIcon.value }
+
+    if (!effect.name) {
+      effect.name = effect.icon ? effect.icon : (Math.random() + 1).toString(36).substring(2)
+    }
+
+    const effectID = generateEffectID(effect.name)
+
+    if (effectID in this.props.availableEffects) {
+      alert(`Effect "${effect}" with ID "${effectID}" already exists`)
+      return
+    }
+
+    this.props.createEffect({ newEffect: effect })
+    this.props.togglePlayerEffect({ playerID: this.state.selectedPlayer, effectID })
+
+    target.newEffectName.value = ""
+  }
+
   render() {
-    let { players, togglePlayerAlive } = this.props
-    let { endAlertIsOpen } = this.state
+    let { players, togglePlayerAlive, togglePlayerEffect, deleteEffect } = this.props
+    let { endAlertIsOpen, playerDetailsAreOpen, newEffectFormIsOpen, selectedPlayer } = this.state
     return (
       <Page
         renderToolbar={() => (<Toolbar />)}
@@ -61,9 +91,19 @@ class Play extends React.Component<PlayProps, PlayState> {
                   {playerID + 1}: {this.props.availableRoles[player.role]}
                 </div>
                 <div>
+                  {player.effects.map(effectID => {
+                    return (
+                      <Icon icon={this.props.availableEffects[effectID].icon} />
+                    )
+                  })}
+                </div>
+                <div>
                   <button onClick={() => togglePlayerAlive(playerID)} className=" button button--outline">
                     <Icon icon={player.alive ? 'skull-crossbones' : 'medkit'} />
                   </button>
+                  <ToolbarButton>
+                    <Icon icon="bars" onClick={() => this.setState({ playerDetailsAreOpen: true, selectedPlayer: playerID })} />
+                  </ToolbarButton>
                 </div>
               </ListItem>
             )}
@@ -85,7 +125,66 @@ class Play extends React.Component<PlayProps, PlayState> {
             </Button>
           </div>
         </AlertDialog>
-      </Page>
+
+        <Dialog isOpen={playerDetailsAreOpen} isCancelable={true} onCancel={this.playerDetailsClose.bind(this)}>
+          <ListTitle>
+            {selectedPlayer + 1}: {this.props.availableRoles[players[selectedPlayer].role]}
+          </ListTitle>
+          <List
+            className="effect-list"
+            dataSource={Object.keys(this.props.availableEffects)}
+            renderRow={(effectID: string) => (
+              <ListItem key={effectID}>
+                <label className="left">
+                  <Checkbox
+                    inputId={effectID}
+                    checked={players[selectedPlayer].effects.includes(effectID)}
+                    onChange={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}
+                    modifier="noborder"
+                  />
+                </label>
+                <label htmlFor={effectID} className="icon-text">
+                  <Icon icon={this.props.availableEffects[effectID].icon} />
+                  {this.props.availableEffects[effectID].name}
+                </label>
+                <button className="right button--dialog" onClick={() => deleteEffect(effectID)}>
+                  <Icon icon="trash" />
+                </button>
+              </ListItem>
+            )}
+          />
+          <Button onClick={() => this.setState({ playerDetailsAreOpen: false, newEffectFormIsOpen: true })} className="alert-dialog-button">Neuer Effekt</Button>
+          <Button onClick={this.playerDetailsClose.bind(this)} className="alert-dialog-button">Schließen</Button>
+        </Dialog>
+
+        <Dialog isOpen={newEffectFormIsOpen} isCancelable={true} onCancel={this.newEffectFormClose.bind(this)}>
+          <ListTitle>
+            Neuer Effekt
+          </ListTitle>
+          <form onSubmit={this.submitNewEffect.bind(this)}>
+            <div className="effect-form-wrapper">
+            <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float />
+              <div className="icon-list">
+                {availableIcons.length > 0 ? availableIcons.map(iconID => {
+                  return (
+                    <div className="icon-list-element" key={iconID}>
+                      <input type="radio" id={iconID} name="newEffectIcon" value={iconID} className="hidden" />
+                      <label htmlFor={iconID}>
+                        <Button className="button--outline button--effect" >
+                          <Icon icon={iconID} />
+                        </Button>
+                      </label>
+                    </div>
+                  )
+                }): "No icons available"}
+              </div>
+            </div>
+            <button type="submit" className="alert-dialog-button">Speichern</button>
+          </form>
+          <Button onClick={this.newEffectFormClose.bind(this)} className="alert-dialog-button">Abbrechen</Button>
+        </Dialog>
+
+      </Page >
     );
   }
 }
