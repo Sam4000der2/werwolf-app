@@ -19,8 +19,8 @@
     "path": "./android.keystore",
     "alias": "upload"
   },
-  "appVersionName": "2.0.0",
-  "appVersionCode": 14,
+  "appVersionName": "2.0.2",
+  "appVersionCode": 22,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://werwolf-berlin.de/app/manifest.json",
@@ -38,5 +38,5 @@
   "fingerprints": [],
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
-  "appVersion": "2.0.0"
+  "appVersion": "2.0.2"
 }
