@@ -1,14 +1,179 @@
+html:root {
+  color-scheme: light;
+  --browser-theme-color: #eef2fb;
+  --app-bg: #eef2fb;
+  --app-bg-alt: #e8edf8;
+  --app-text: #171d2f;
+  --surface-bg: #ffffff;
+  --surface-soft: #f6f8fc;
+  --surface-elevated: #ffffff;
+  --border-color: rgba(23, 34, 63, 0.14);
+  --border-strong: rgba(23, 34, 63, 0.28);
+  --muted-text: rgba(23, 29, 47, 0.68);
+  --accent: #356fe6;
+  --accent-contrast: #ffffff;
+  --accent-soft-bg: rgba(53, 111, 230, 0.14);
+  --accent-soft-border: rgba(53, 111, 230, 0.26);
+  --accent-soft-text: #234aab;
+  --danger: #be2f46;
+  --danger-contrast: #ffffff;
+  --success: #1f8b5d;
+  --success-contrast: #ffffff;
+  --dead-bg: #d6deec;
+  --panel-bg-start: rgba(255, 255, 255, 0.99);
+  --panel-bg-end: rgba(247, 249, 252, 0.97);
+  --soft-row-bg: rgba(21, 29, 56, 0.06);
+  --chip-bg: rgba(21, 29, 56, 0.09);
+  --wake-highlight: rgba(66, 103, 222, 0.1);
+  --wake-border: rgba(66, 103, 222, 0.8);
+  --night-soft-bg: rgba(67, 96, 210, 0.2);
+  --night-soft-text: #1f3d95;
+  --warning-soft-bg: rgba(243, 176, 31, 0.22);
+  --warning-soft-text: #705500;
+  --violet-soft-bg: rgba(123, 93, 214, 0.2);
+  --violet-soft-text: #49359f;
+  --pink-soft-bg: rgba(193, 41, 143, 0.17);
+  --pink-soft-text: #7f1b63;
+  --green-soft-bg: rgba(69, 163, 120, 0.19);
+  --green-soft-text: #1a6a48;
+  --toolbar-bg: rgba(255, 255, 255, 0.9);
+  --toolbar-text: #18233a;
+  --toolbar-icon: #4c608d;
+  --toolbar-icon-active: #1f4fbe;
+  --dialog-overlay: rgba(10, 17, 33, 0.44);
+  --card-shadow: 0 10px 24px rgba(14, 27, 60, 0.09);
+  --focus-ring: 0 0 0 3px rgba(53, 111, 230, 0.28);
+
+  /* Bridge Onsen UI palette tokens to app theme tokens. */
+  --background-color: var(--app-bg-alt);
+  --text-color: var(--app-text);
+  --sub-text-color: var(--muted-text);
+  --highlight-color: var(--accent);
+  --toolbar-background-color: var(--toolbar-bg);
+  --toolbar-text-color: var(--toolbar-text);
+  --toolbar-button-color: var(--toolbar-icon-active);
+  --toolbar-border-color: var(--border-color);
+  --list-background-color: var(--surface-bg);
+  --list-header-background-color: var(--surface-soft);
+  --list-title-color: var(--muted-text);
+  --list-item-chevron-color: var(--muted-text);
+  --alert-dialog-background-color: var(--surface-bg);
+  --alert-dialog-text-color: var(--app-text);
+  --alert-dialog-button-color: var(--accent-soft-text);
+  --alert-dialog-separator-color: var(--border-color);
+  --dialog-background-color: var(--surface-bg);
+  --dialog-text-color: var(--app-text);
+  --card-background-color: var(--surface-bg);
+  --card-text-color: var(--app-text);
+  --select-input-color: var(--app-text);
+  --select-input-border-color: var(--border-color);
+  --input-bg-color: var(--surface-bg);
+  --input-border-color: var(--border-color);
+  --input-text-color: var(--app-text);
+  --input-placeholder-color: var(--muted-text);
+  --material-background-color: var(--app-bg-alt);
+  --material-text-color: var(--app-text);
+  --material-toolbar-background-color: var(--toolbar-bg);
+  --material-toolbar-text-color: var(--toolbar-text);
+  --material-toolbar-button-color: var(--toolbar-icon-active);
+  --material-list-background-color: var(--surface-bg);
+  --material-list-item-separator-color: var(--border-color);
+  --material-list-header-text-color: var(--muted-text);
+  --material-button-background-color: var(--accent);
+  --material-button-text-color: var(--accent-contrast);
+  --material-button-disabled-background-color: var(--border-color);
+  --material-button-disabled-color: var(--muted-text);
+  --material-text-input-text-color: var(--app-text);
+  --material-text-input-inactive-color: var(--muted-text);
+  --material-text-input-active-color: var(--accent);
+  --material-dialog-background-color: var(--surface-bg);
+  --material-dialog-text-color: var(--app-text);
+  --material-alert-dialog-background-color: var(--surface-bg);
+  --material-alert-dialog-title-color: var(--app-text);
+  --material-alert-dialog-content-color: var(--muted-text);
+  --material-alert-dialog-button-color: var(--accent-soft-text);
+  --material-card-background-color: var(--surface-bg);
+  --material-card-text-color: var(--app-text);
+  --material-select-input-color: var(--app-text);
+  --material-select-input-inactive-color: var(--muted-text);
+  --material-select-border-color: var(--border-color);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --browser-theme-color: #0f1524;
+  --app-bg: #0f1524;
+  --app-bg-alt: #121b2d;
+  --app-text: #e7ecfb;
+  --surface-bg: #182235;
+  --surface-soft: #131c2f;
+  --surface-elevated: #202b41;
+  --border-color: rgba(171, 192, 243, 0.2);
+  --border-strong: rgba(171, 192, 243, 0.36);
+  --muted-text: rgba(225, 235, 255, 0.72);
+  --accent: #79a2ff;
+  --accent-contrast: #0f1728;
+  --accent-soft-bg: rgba(121, 162, 255, 0.22);
+  --accent-soft-border: rgba(121, 162, 255, 0.4);
+  --accent-soft-text: #bfd2ff;
+  --danger: #dd5570;
+  --danger-contrast: #180d13;
+  --success: #3bb985;
+  --success-contrast: #0d1d17;
+  --dead-bg: #253149;
+  --panel-bg-start: rgba(29, 39, 61, 0.96);
+  --panel-bg-end: rgba(20, 28, 45, 0.96);
+  --soft-row-bg: rgba(174, 195, 243, 0.11);
+  --chip-bg: rgba(174, 195, 243, 0.15);
+  --wake-highlight: rgba(121, 162, 255, 0.2);
+  --wake-border: rgba(121, 162, 255, 0.92);
+  --night-soft-bg: rgba(120, 155, 255, 0.26);
+  --night-soft-text: #cfe0ff;
+  --warning-soft-bg: rgba(255, 194, 66, 0.24);
+  --warning-soft-text: #ffe3a6;
+  --violet-soft-bg: rgba(149, 122, 255, 0.25);
+  --violet-soft-text: #dccfff;
+  --pink-soft-bg: rgba(225, 99, 186, 0.23);
+  --pink-soft-text: #ffd4f0;
+  --green-soft-bg: rgba(90, 205, 149, 0.24);
+  --green-soft-text: #c9f8e3;
+  --toolbar-bg: rgba(19, 29, 47, 0.9);
+  --toolbar-text: #e7ecfb;
+  --toolbar-icon: #b9c8f7;
+  --toolbar-icon-active: #ffffff;
+  --dialog-overlay: rgba(3, 6, 12, 0.66);
+  --card-shadow: 0 14px 36px rgba(4, 8, 16, 0.5);
+  --focus-ring: 0 0 0 3px rgba(121, 162, 255, 0.38);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  background: var(--app-bg);
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(180deg, var(--app-bg) 0%, var(--app-bg-alt) 100%);
+  color: var(--app-text);
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+a {
+  color: inherit;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
@@ -28,27 +193,38 @@ code {
   display: flex !important;
 }
 
-ons-list-item.isDead {
-  background-color: lightgray;
+ons-page .page__background,
+.page__background {
+  background: var(--app-bg-alt);
 }
 
-.isDead>div {
+ons-page .page__content,
+.page__content {
+  background: transparent;
+  color: var(--app-text);
+}
+
+ons-list-item.isDead {
+  background-color: var(--dead-bg);
+}
+
+.isDead > div {
   text-decoration-line: line-through;
 }
 
-.player>div {
+.player > div {
   display: flex;
   justify-content: flex-start;
   gap: 12px;
   flex-wrap: nowrap;
 }
 
-.player>div div {
+.player > div div {
   flex-shrink: 0;
   flex-grow: 0;
 }
 
-.player>div div:nth-child(2) {
+.player > div div:nth-child(2) {
   flex-shrink: 1;
   flex-grow: 1;
   display: flex;
@@ -56,10 +232,10 @@ ons-list-item.isDead {
   gap: 8px;
 }
 
-ons-list-item:not(.isDead) button {
-  color: white;
-  border-color: #0076ff;
-  background-color: #0076ff;
+ons-list-item.player:not(.isDead) button.button--outline {
+  color: var(--accent-soft-text);
+  border-color: var(--accent-soft-border);
+  background-color: var(--accent-soft-bg);
 }
 
 .checkbox--noborder__checkmark:after {
@@ -69,20 +245,64 @@ ons-list-item:not(.isDead) button {
 
 .effect-list {
   max-height: 80vh;
-  overflow-y: auto!important;
+  overflow-y: auto !important;
 }
 
 .effect-list .list-item {
   margin-bottom: 0;
 }
 
-.button>ons-icon {
+.button > ons-icon {
   width: 20px;
   text-align: center;
 }
 
+.button {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.button[disabled],
+.button:disabled,
+button[disabled] {
+  opacity: 0.48;
+}
+
+.button--outline,
+.button.button--outline {
+  background-color: transparent;
+  border-color: var(--border-strong);
+  color: var(--accent-soft-text);
+}
+
+.button--quiet,
+.button.button--quiet {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--accent-soft-text) !important;
+}
+
+.button--quiet:hover,
+.button.button--quiet:hover {
+  background-color: var(--accent-soft-bg) !important;
+}
+
+.fab {
+  background-color: var(--accent) !important;
+  color: var(--accent-contrast) !important;
+}
+
 .effect-form-wrapper {
-  background-color: white;
+  background-color: var(--surface-bg);
   padding: 24px;
 }
 
@@ -91,7 +311,7 @@ ons-list-item:not(.isDead) button {
 }
 
 .icon-list {
-  display: flex!important;
+  display: flex !important;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
@@ -104,13 +324,13 @@ ons-list-item:not(.isDead) button {
   padding: 0;
 }
 
-.icon-list-element input[type="radio"]:checked~label>ons-button {
-  color: white;
-  border-color: #0076ff;
-  background-color: #0076ff;
+.icon-list-element input[type="radio"]:checked ~ label > ons-button {
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  background-color: var(--accent);
 }
 
-label.icon-text>ons-icon {
+label.icon-text > ons-icon {
   margin-right: 12px;
 }
 
@@ -118,11 +338,137 @@ ons-list-item button.button--dialog,
 .button--dialog {
   background-color: transparent;
   border: none;
-  color: gray;
+  color: var(--muted-text);
   padding: 12px 15px;
 }
 
 .button--dialog:active {
-  background-color: #0076ff;
-  color: white;
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+}
+
+ons-toolbar .toolbar {
+  background-color: var(--toolbar-bg);
+  color: var(--toolbar-text);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+ons-toolbar .toolbar .center,
+ons-toolbar .toolbar .left,
+ons-toolbar .toolbar .right {
+  color: var(--toolbar-text);
+}
+
+ons-list,
+.list,
+ons-list-item .list-item,
+.list-item,
+ons-card,
+.card,
+.alert-dialog,
+.alert-dialog-container,
+.dialog,
+.dialog-container {
+  background-color: var(--surface-bg);
+  color: var(--app-text);
+}
+
+ons-list-item .list-item,
+.list-item {
+  border-color: var(--border-color);
+}
+
+ons-list-item .list-item__title,
+.list-item__title {
+  color: var(--app-text);
+}
+
+ons-list-item .list-item__subtitle,
+.list-item__subtitle,
+ons-list-item .list-item__label,
+.list-item__label {
+  color: var(--muted-text);
+  opacity: 1;
+}
+
+.alert-dialog-mask,
+.dialog-mask {
+  background: var(--dialog-overlay);
+}
+
+ons-input,
+input,
+select,
+textarea,
+.text-input,
+.textarea,
+.select-input {
+  color: var(--app-text);
+}
+
+input,
+select,
+textarea,
+.text-input,
+.textarea,
+.select-input {
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-bg);
+}
+
+.text-input--material {
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.text-input--material:focus {
+  border-bottom-color: var(--accent) !important;
+}
+
+.text-input--material__label {
+  color: var(--muted-text) !important;
+}
+
+.alert-dialog-button {
+  color: var(--accent-soft-text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-text);
+}
+
+select option {
+  color: var(--app-text);
+  background-color: var(--surface-bg);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+ons-list-title,
+.list-title,
+.alert-dialog-title,
+.alert-dialog-content {
+  color: var(--app-text);
+}
+
+::selection {
+  background: var(--accent-soft-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

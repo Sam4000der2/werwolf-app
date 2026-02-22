@@ -1,0 +1,33 @@
+.themeSwitch {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    width: 100%;
+    line-height: 1;
+    gap: 2px;
+    padding-right: 4px;
+}
+
+.themeSwitch :global(.toolbar-button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    color: var(--toolbar-icon);
+    opacity: 0.8;
+}
+
+.themeSwitch :global(.toolbar-button):hover {
+    opacity: 1;
+}
+
+.themeActive {
+    color: var(--toolbar-icon-active) !important;
+    opacity: 1 !important;
+}
