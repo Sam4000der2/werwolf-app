@@ -13,6 +13,6 @@ export const exampleDeck12: ExampleDeckTemplate = {
         jaeger: 1,
         heiler: 1,
         prinz: 1,
-        cupido: 1,
+        armor: 1,
     },
 }

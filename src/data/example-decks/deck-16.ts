@@ -13,9 +13,9 @@ export const exampleDeck16: ExampleDeckTemplate = {
         jaeger: 1,
         heiler: 1,
         prinz: 1,
-        cupido: 1,
+        armor: 1,
         priest: 1,
         wolfsjunges: 1,
-        wolfsseher: 1,
+        traumwolf: 1,
     },
 }

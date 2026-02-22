@@ -17,17 +17,10 @@ export const defaultRoles = {
     priest: "Priester",
     lehrling: "Seherlehrling",
     traumwolf: "Traumwolf (Joker)",
-    whiteWolf: "Weißer Wolf",
     wolfsjunges: "Wolfsjunges",
     zahnarzt: "Zahnarzt",
-
-    dieb: "Dieb",
-    maedchen: "Mädchen",
+    putzfrau: "Putzfrau",
     bodyguard: "Bodyguard",
-    cupido: "Cupido",
-    medium: "Medium",
-    wolfsseher: "Wolfsseher",
-    urwolf: "Urwolf",
     vampir: "Vampir",
     einsamerwerwolf: "Einsamer Werwolf",
 }
@@ -51,38 +44,27 @@ export const defaultRoleTimings: { [key: string]: RoleTiming } = {
     priest: "night",
     lehrling: "night",
     traumwolf: "night",
-    whiteWolf: "night",
-    wolfsjunges: "day",
+    wolfsjunges: "night",
     zahnarzt: "night",
 
-    dieb: "night",
-    maedchen: "night",
+    putzfrau: "night",
     bodyguard: "night",
-    cupido: "night",
-    medium: "night",
-    wolfsseher: "night",
-    urwolf: "night",
     vampir: "night",
     einsamerwerwolf: "night",
 }
 
 export const defaultFactionNames: { [key: string]: string } = {
     wolfpack: "Werwölfe",
-    graywolves: "Graue Werwölfe",
     vampires: "Vampire",
 }
 
 export const defaultNightWakeRules: { [key: string]: RoleNightWakeRule } = {
     armor: { schedule: "night_zero_only" },
-    cupido: { schedule: "night_zero_only" },
-    dieb: { schedule: "night_zero_only" },
     priest: { schedule: "night_zero_only" },
 
     werwolf: { factionID: "wolfpack", wakeAsFaction: true },
     traumwolf: { factionID: "wolfpack", wakeAsFaction: true },
     wolfsjunges: { factionID: "wolfpack", wakeAsFaction: true },
-    wolfsseher: { factionID: "wolfpack", wakeAsFaction: true, hasAdditionalRoleWake: true },
-    urwolf: { factionID: "wolfpack", wakeAsFaction: true, hasAdditionalRoleWake: true },
     einsamerwerwolf: {
         factionID: "wolfpack",
         wakeAsFaction: true,
@@ -90,6 +72,5 @@ export const defaultNightWakeRules: { [key: string]: RoleNightWakeRule } = {
         additionalRoleSchedule: "every_even_night_from_two",
     },
 
-    whiteWolf: { factionID: "graywolves", wakeAsFaction: true, hasAdditionalRoleWake: true },
     vampir: { factionID: "vampires", wakeAsFaction: true },
 }
