@@ -48,15 +48,15 @@ const roleActivationOrder: RoleActivationMode[] = ["day", "night_every", "night_
 const modeInfo = (mode: RoleActivationMode): { label: string, icon: string, cssClass: string } => {
   switch (mode) {
     case "night_zero":
-      return { label: "Nacht: nur Nacht Null", icon: "fa-hourglass-half", cssClass: styles.modeNightZero }
+      return { label: "Nacht: 1x", icon: "fa-hourglass-half", cssClass: styles.modeNightZero }
     case "night_even":
-      return { label: "Nacht: jede gerade Nacht", icon: "fa-adjust", cssClass: styles.modeNightEven }
+      return { label: "Nacht: 2n", icon: "fa-adjust", cssClass: styles.modeNightEven }
     case "night_odd":
-      return { label: "Nacht: jede ungerade Nacht", icon: "fa-random", cssClass: styles.modeNightOdd }
+      return { label: "Nacht: 2n+1", icon: "fa-random", cssClass: styles.modeNightOdd }
     case "night_every":
-      return { label: "Nacht: jede Nacht", icon: "fa-moon", cssClass: styles.modeNightEvery }
+      return { label: "Nacht: ∞", icon: "fa-moon", cssClass: styles.modeNightEvery }
     default:
-      return { label: "Tag: nur tagsüber", icon: "fa-sun", cssClass: styles.modeDay }
+      return { label: "Tag/Passiv", icon: "fa-sun", cssClass: styles.modeDay }
   }
 }
 
@@ -189,14 +189,6 @@ function RolePicker({
             </Button>
           </div>
 
-          <div className={styles.countColumn}>
-            <div className={styles.countStepper}>
-              <Button className={styles.stepButton} onClick={() => removeRole(roleKey)} disabled={pickedRoles[roleKey] <= 0}>-</Button>
-              <span className={styles.counter}>{pickedRoles[roleKey]}</span>
-              <Button className={styles.stepButton} onClick={() => addRole(roleKey)}>+</Button>
-            </div>
-          </div>
-
           {isNightRole ? (
             <details className={styles.roleOptions}>
               <summary>Böse Fraktion & Zusatz</summary>
@@ -208,7 +200,7 @@ function RolePicker({
                   value={roleFactionID}
                   onChange={event => setRoleFaction({ roleID: roleKey, factionID: event.currentTarget.value })}
                 >
-                  <option value="">Keine böse Fraktion</option>
+                  <option value="">Dorf / Solofraktion</option>
                   {factionOptions.map(([factionID, factionName]) => (
                     <option key={`${roleKey}_${factionID}`} value={factionID}>{factionName}</option>
                   ))}
@@ -228,6 +220,13 @@ function RolePicker({
           ) : (
             <div className={styles.roleOptionsPlaceholder} aria-hidden="true" />
           )}
+        </div>
+        <div className={`right ${styles.countColumn}`}>
+          <div className={styles.countStepper}>
+            <Button className={styles.stepButton} onClick={() => removeRole(roleKey)} disabled={pickedRoles[roleKey] <= 0}>-</Button>
+            <span className={styles.counter}>{pickedRoles[roleKey]}</span>
+            <Button className={styles.stepButton} onClick={() => addRole(roleKey)}>+</Button>
+          </div>
         </div>
       </ListItem>
     )

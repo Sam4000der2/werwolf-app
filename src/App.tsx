@@ -75,7 +75,10 @@ const App = ({ currentPage, themeMode }: ConnectedProps<typeof connector>) => {
     <div className="appShell">
       {content}
       <footer className="appFooter">
-        Version {packageInfo.version} · <a href={forkRepoURL} target="_blank" rel="noopener noreferrer">Fork-Repo</a>
+        <span className="appFooterContent">
+          <span>Version {packageInfo.version}</span>
+          <a className="appFooterLink" href={forkRepoURL} target="_blank" rel="noopener noreferrer">Fork-Repo</a>
+        </span>
       </footer>
     </div>
   )

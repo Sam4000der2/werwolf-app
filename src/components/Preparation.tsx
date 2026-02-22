@@ -336,7 +336,9 @@ const Preparation = ({
           </div>
         </details>
 
-        <p className={styles.roleTimingHint}>Tipp: Der Modus-Schalter wechselt durch Tag, Nacht (jede), Nacht 0, Nacht gerade und Nacht ungerade.</p>
+        <p className={styles.roleTimingHint}>
+          Nachtoptionen: Tag/passive Rollen, jede Nacht (∞), einmalig nachts (1x), gerade Nächte (2n), ungerade Nächte (2n+1).
+        </p>
         <section className={styles.rolePickerSection}>
           <div className="scrollable_content"><RolePicker /></div>
         </section>
