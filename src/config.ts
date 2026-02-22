@@ -1,26 +1,29 @@
-export const defaultRoles = {
-    werwolf: "Werwolf",
-    dorfbewohner: "Dorfbewohner",
-    seherin: "Seherin",
-    hexe: "Hexe",
-    jaeger: "Jäger",
-    armor: "Armor",
-    heiler: "Heiler",
-    prinz: "Prinz",
+export {
+    defaultRoles,
+    defaultRoleTimings,
+    defaultFactionNames,
+    defaultNightWakeRules,
+} from './data/default-role-definitions'
 
-    AlterMann: "Alter Mann",
-    depp: "Dorfdepp",
-    drache: "Drache (Joker)",
-    bursche: "Harter Bursche",
-    lykanthrophin: "Lykanthrophin",
-    post: "Postbote (Joker)",
-    priest: "Priester",
-    lehrling: "Seherlehrling",
-    traumwolf: "Traumwolf (Joker)",
-    whiteWolf: "Weißer Wolf",
-    wolfsjunges: "Wolfsjunges",
-    zahnarzt: "Zahnarzt",
-};
+export const defaultEffects: { [key: string]: Effect } = {
+    verliebt: { name: "Verliebt", icon: "fa-heart", duration: "permanent" },
+    werwolfziel: { name: "Werwolf-Ziel", icon: "fa-flag", duration: "night" },
+    schutznacht: { name: "Geschützt (Nacht)", icon: "fa-shield", duration: "night" },
+    geschuetzttag: { name: "Geschützt (Tag)", icon: "fa-shield", duration: "next_day" },
+    schlaeftwoanders: { name: "Schläft woanders", icon: "fa-chair", duration: "night" },
+    stummnaechstertag: { name: "Darf morgen nicht reden", icon: "fa-comment", duration: "next_day" },
+    blockiertnacht: { name: "Blockiert (Nacht)", icon: "fa-lock", duration: "night" },
+    ueberprueft: { name: "Überprüft", icon: "fa-eye", duration: "night" },
+    beobachtet: { name: "Beobachtet", icon: "fa-glasses", duration: "night" },
+    markiertnacht: { name: "Markiert (Nacht)", icon: "fa-flag-checkered", duration: "night" },
+    einsamerwolfziel: { name: "Ziel des einsamen Werwolfs", icon: "fa-cross", duration: "night" },
+    verwandelt: { name: "Verwandelt", icon: "fa-atom", duration: "permanent" },
+    verflucht: { name: "Verflucht", icon: "fa-moon", duration: "permanent" },
+    gesegnet: { name: "Gesegnet", icon: "fa-cross", duration: "permanent" },
+    vergiftet: { name: "Vergiftet", icon: "fa-vial", duration: "permanent" },
+    gebissen: { name: "Gebissen", icon: "fa-vial", duration: "next_day" },
+    faehigkeitverbraucht: { name: "Fähigkeit verbraucht", icon: "fa-hourglass-half", duration: "permanent" },
+}
 
 export const availableIcons = [
     "fa-image",

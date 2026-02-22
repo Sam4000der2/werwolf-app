@@ -1,3 +1,347 @@
+.factionPanel {
+    margin: 0 0 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--surface-soft);
+    overflow: hidden;
+}
+
+.factionPanel summary {
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--app-text);
+}
+
+.factionPanelBody {
+    padding: 8px 10px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.factionHint {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--muted-text);
+}
+
+.factionCreateRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inlineInput {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0 8px;
+    font-size: 0.86rem;
+    color: var(--app-text);
+    background: var(--surface-bg);
+}
+
+.factionChipRow {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.factionChip {
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    color: var(--app-text);
+}
+
+.roleRow :global(.list-item__center) {
+    width: 100%;
+    min-width: 0;
+    padding-left: 0 !important;
+    padding-right: 0;
+    display: block;
+}
+
+.rowContent {
+    --role-col-width: clamp(120px, 22vw, 190px);
+    --mode-col-width: clamp(210px, 34vw, 320px);
+    --count-col-width: clamp(102px, 14vw, 128px);
+    display: grid;
+    grid-template-columns: minmax(0, var(--role-col-width)) minmax(0, var(--mode-col-width)) minmax(0, var(--count-col-width));
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "role mode count"
+        "details details count";
+    column-gap: 10px;
+    row-gap: 6px;
+    align-items: stretch;
+    width: 100%;
+    text-align: left;
+}
+
+/* Force table-like layout inside the Onsen "center" slot. */
+.roleRow :global(.center).rowContent,
+.roleRow :global(.list-item__center).rowContent {
+    display: grid !important;
+    grid-template-columns: minmax(0, var(--role-col-width)) minmax(0, var(--mode-col-width)) minmax(0, var(--count-col-width)) !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas:
+        "role mode count"
+        "details details count" !important;
+    width: 100% !important;
+}
+
+.roleTitleRow {
+    grid-area: role;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.roleName {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    color: var(--app-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.roleOptions {
+    width: 100%;
+    grid-area: details;
+    min-width: 0;
+}
+
+.roleOptionsPlaceholder {
+    grid-area: details;
+    min-height: 0;
+}
+
+.roleOptions summary {
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.74rem;
+    color: var(--muted-text);
+}
+
+.roleOptionsBody {
+    margin-top: 4px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.optionLabel {
+    font-size: 0.71rem;
+    color: var(--muted-text);
+}
+
+.optionSelect {
+    width: 100%;
+    min-height: 30px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    background: var(--surface-bg);
+    color: var(--app-text);
+    font-size: 0.82rem;
+    padding: 2px 6px;
+}
+
+.checkboxLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--app-text);
+}
+
 .counter {
-    padding: 0 15px;
+    min-width: 42px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--app-text);
+}
+
+.modeColumn {
+    grid-area: mode;
+    width: 100%;
+    min-width: 0;
+    align-self: start;
+    justify-self: start;
+}
+
+.countColumn {
+    grid-area: count;
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    align-self: stretch;
+    min-width: 0;
+}
+
+.deleteRoleButton {
+    min-width: 30px;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 8px;
+}
+
+.countStepper {
+    display: grid;
+    grid-template-columns: 40px 52px 40px;
+    align-items: center;
+    column-gap: 6px;
+}
+
+.stepButton {
+    min-width: 40px;
+    min-height: 34px;
+}
+
+.modeButton {
+    width: 100%;
+    min-width: 0;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    white-space: normal;
+    line-height: 1.15;
+    text-align: left;
+    border: 1px solid transparent;
+}
+
+.modeDay {
+    background-color: var(--warning-soft-bg);
+    color: var(--warning-soft-text);
+}
+
+.modeNightEvery {
+    background-color: var(--night-soft-bg);
+    color: var(--night-soft-text);
+}
+
+.modeNightZero {
+    background-color: var(--violet-soft-bg);
+    color: var(--violet-soft-text);
+}
+
+.modeNightEven {
+    background-color: var(--warning-soft-bg);
+    color: var(--warning-soft-text);
+}
+
+.modeNightOdd {
+    background-color: var(--green-soft-bg);
+    color: var(--green-soft-text);
+}
+
+@media (max-width: 900px) {
+    .rowContent {
+        --role-col-width: clamp(112px, 20vw, 168px);
+        --mode-col-width: clamp(188px, 33vw, 280px);
+        --count-col-width: clamp(96px, 13vw, 118px);
+    }
+
+    .modeButton {
+        font-size: 0.7rem;
+    }
+
+    .factionCreateRow {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 640px) {
+    .rowContent {
+        --role-col-width: 110px;
+        --mode-col-width: 176px;
+        --count-col-width: 104px;
+        gap: 8px;
+    }
+
+    .modeButton {
+        font-size: 0.68rem;
+    }
+
+    .countStepper {
+        grid-template-columns: 36px 46px 36px;
+        column-gap: 4px;
+    }
+
+    .stepButton {
+        min-width: 36px;
+        min-height: 34px;
+    }
+    
+    .counter {
+        min-width: 46px;
+    }
+}
+
+@media (max-width: 520px) {
+    .rowContent {
+        --role-col-width: 96px;
+        --mode-col-width: 162px;
+        --count-col-width: 92px;
+        column-gap: 6px;
+    }
+
+    .modeButton {
+        font-size: 0.66rem;
+        padding: 2px 6px;
+    }
+
+    .roleName {
+        font-size: 0.86rem;
+    }
+
+    .countStepper {
+        grid-template-columns: 34px 42px 34px;
+        column-gap: 3px;
+    }
+
+    .stepButton {
+        min-width: 34px;
+        min-height: 32px;
+    }
+
+    .counter {
+        min-width: 42px;
+    }
+}
+
+@media (max-width: 430px) {
+    .rowContent {
+        --role-col-width: 88px;
+        --mode-col-width: 150px;
+        --count-col-width: 86px;
+        column-gap: 5px;
+    }
+
+    .modeButton {
+        font-size: 0.64rem;
+        padding: 2px 6px;
+    }
+
+    .roleName {
+        font-size: 0.84rem;
+    }
 }

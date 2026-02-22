@@ -1,0 +1,253 @@
+.preparationLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.villageCard {
+  margin: 0 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--surface-bg) 0%, var(--surface-soft) 100%);
+  box-shadow: var(--card-shadow);
+}
+
+.villageLabel {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.villageCount {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.villageCount span {
+  font-size: 1.35rem;
+}
+
+.deckPanel {
+  margin: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--surface-bg);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.deckSummary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.deckSummary::-webkit-details-marker {
+  display: none;
+}
+
+.deckSummary::after {
+  content: "▾";
+  font-size: 0.8rem;
+  color: var(--muted-text);
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.deckPanel[open] .deckSummary::after {
+  transform: rotate(0deg);
+}
+
+.deckSummaryMeta {
+  margin-left: auto;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--muted-text);
+}
+
+.deckPanelContent {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-soft);
+}
+
+.deckPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.deckPanelTitle {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.deckHeaderActions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.deckSaveRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.deckNameInput {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--app-text);
+  background-color: var(--surface-bg);
+}
+
+.statusText {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.deckList {
+  max-height: min(42vh, 330px);
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--surface-bg);
+}
+
+.deckList :global(.list-item__center),
+.deckList :global(.center) {
+  text-align: left;
+}
+
+.deckHint {
+  margin: 0;
+  padding: 8px;
+  text-align: center;
+  color: var(--muted-text);
+  font-size: 0.82rem;
+}
+
+.deckName {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--app-text);
+}
+
+.deckMeta {
+  font-size: 0.76rem;
+  color: var(--muted-text);
+}
+
+.deckRowActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.secondaryBackup {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted-text);
+}
+
+.secondaryBackupActions {
+  display: flex;
+  gap: 4px;
+}
+
+.roleTimingHint {
+  margin: 0 12px;
+  font-size: 0.79rem;
+  color: var(--muted-text);
+}
+
+.rolePickerSection {
+  margin: 0 12px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--surface-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.rolePickerSection :global(.scrollable_content) {
+  padding-bottom: 98px;
+}
+
+@media (max-width: 640px) {
+  .preparationLayout {
+    gap: 10px;
+  }
+
+  .villageCard,
+  .deckPanel,
+  .rolePickerSection,
+  .roleTimingHint {
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+
+  .deckSaveRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .deckPanelHeader {
+    flex-wrap: wrap;
+  }
+
+  .deckHeaderActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .deckSummary {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .deckSummaryMeta {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .deckRowActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .secondaryBackup {
+    flex-wrap: wrap;
+  }
+}

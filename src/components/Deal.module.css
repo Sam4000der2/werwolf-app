@@ -17,10 +17,20 @@
     font-weight: bold;
 }
 
+.rolehint {
+    font-size: 1rem;
+    opacity: 0.78;
+    color: var(--muted-text);
+}
+
 .red {
-    background-color: red !important;
+    background-color: var(--danger) !important;
+    border-color: var(--danger) !important;
+    color: var(--danger-contrast) !important;
 }
 
 .green {
-    background-color: green !important;
+    background-color: var(--success) !important;
+    border-color: var(--success) !important;
+    color: var(--success-contrast) !important;
 }

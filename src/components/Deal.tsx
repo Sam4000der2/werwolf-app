@@ -10,15 +10,19 @@ import styles from './Deal.module.css';
 function mapStateToProps(state: RootState) {
   let { activeRoleIdx, roleIsVisible, roleWasVisible } = state.game.deal
   let availableRoles = state.game.availableRoles
+  let roleTimings = state.game.roleTimings
   let players = state.game.players
   let nextButtonDisabled = roleIsVisible || !roleWasVisible || activeRoleIdx >= players.length - 1
   let playButtonDisabled = roleIsVisible || !roleWasVisible || activeRoleIdx < players.length - 1
+  const activeRoleID = players[activeRoleIdx]?.role || ""
+  const roleTiming = roleTimings[activeRoleID] || "day"
   return {
     playerNr: activeRoleIdx + 1,
     roleIsVisible,
     nextButtonDisabled,
     playButtonDisabled,
-    roleText: availableRoles[players[activeRoleIdx].role],
+    roleText: availableRoles[activeRoleID],
+    roleTiming,
   }
 }
 
@@ -30,7 +34,7 @@ type DealProps = ConnectedProps<typeof connector>
 
 const Deal = ({
   navTo,
-  playerNr, roleIsVisible, nextButtonDisabled, playButtonDisabled, roleText,
+  playerNr, roleIsVisible, nextButtonDisabled, playButtonDisabled, roleText, roleTiming,
   currentRoleToggleVisibility, dealNextRole,
 }: DealProps) => (
   <Page
@@ -70,6 +74,10 @@ const Deal = ({
       <p hidden={!roleIsVisible} className="center">
         Du bist<br /><br />
         <span className={styles.roletext}>{roleText}</span>
+        <br /><br />
+        <span className={styles.rolehint}>
+          {roleTiming === "night" ? "Nachtrolle (in der Nacht aktiv)" : "Tagrolle"}
+        </span>
       </p>
     </div>
   </Page >
