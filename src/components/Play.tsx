@@ -142,10 +142,6 @@ const Play = ({
     new Set<EffectDuration>(getAllowedEffectDurations(phase.mode, phase.nightCount))
   ), [phase.mode, phase.nightCount])
 
-  const selectableDurationOptions = React.useMemo(() => (
-    effectDurationOptions.filter(option => allowedEffectDurations.has(option.duration))
-  ), [allowedEffectDurations])
-
   const selectableEffectIDs = React.useMemo(() => (
     sortedEffectIDs.filter(effectID => allowedEffectDurations.has(availableEffects[effectID]?.duration))
   ), [sortedEffectIDs, availableEffects, allowedEffectDurations])
@@ -247,15 +243,11 @@ const Play = ({
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
-    const defaultDuration = selectableDurationOptions[0]?.duration || "permanent"
+    const defaultDuration = effectDurationOptions[0]?.duration || "permanent"
     const rawDuration = formData.get("newEffectDuration")
     const newEffectDuration = (rawDuration === "night" || rawDuration === "next_day" || rawDuration === "permanent")
       ? rawDuration
       : defaultDuration
-    if (!allowedEffectDurations.has(newEffectDuration)) {
-      alert(`Effekte vom Typ "${effectDurationLabel(newEffectDuration)}" sind in dieser Phase nicht aktivierbar.`)
-      return
-    }
     const effectIcon = String(formData.get("newEffectIcon") || "").trim() || (
       newEffectDuration === "night" ? "fa-moon" : newEffectDuration === "next_day" ? "fa-sun" : "fa-heart"
     )
@@ -451,7 +443,7 @@ const Play = ({
           <div className="effect-form-wrapper">
             <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float />
             <div className={styles.durationPicker}>
-              {selectableDurationOptions.map((option, index) => (
+              {effectDurationOptions.map((option, index) => (
                 <label key={option.duration}>
                   <input
                     type="radio"
