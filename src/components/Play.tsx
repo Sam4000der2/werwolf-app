@@ -146,6 +146,10 @@ const Play = ({
     effectDurationOptions.filter(option => allowedEffectDurations.has(option.duration))
   ), [allowedEffectDurations])
 
+  const selectableEffectIDs = React.useMemo(() => (
+    sortedEffectIDs.filter(effectID => allowedEffectDurations.has(availableEffects[effectID]?.duration))
+  ), [sortedEffectIDs, availableEffects, allowedEffectDurations])
+
   const effectPickerHint = React.useMemo(() => {
     if (phase.mode === "day") {
       return "Tagsüber lassen sich nur permanente Effekte aktivieren."
@@ -405,27 +409,18 @@ const Play = ({
           {playerNames[selectedPlayer] ? ` · ${playerNames[selectedPlayer]}` : ""}
         </ListTitle>
         <List className="effect-list">
-          {sortedEffectIDs.map((effectID: string) => {
+          {selectableEffectIDs.map((effectID: string) => {
             const effect = availableEffects[effectID]
             if (!effect || !selectedPlayerData) {
               return null
             }
-            const effectIsActive = selectedPlayerData.effects.includes(effectID)
-            const effectCanBeActivated = allowedEffectDurations.has(effect.duration)
-            const effectActivationLocked = !effectCanBeActivated && !effectIsActive
             return (
               <ListItem key={effectID}>
                 <label className="left">
                   <Checkbox
                     inputId={effectID}
-                    checked={effectIsActive}
-                    disabled={effectActivationLocked}
-                    onChange={() => {
-                      if (effectActivationLocked) {
-                        return
-                      }
-                      togglePlayerEffect({ playerID: selectedPlayer, effectID })
-                    }}
+                    checked={selectedPlayerData.effects.includes(effectID)}
+                    onChange={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}
                     modifier="noborder"
                   />
                 </label>
