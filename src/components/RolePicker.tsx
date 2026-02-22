@@ -56,7 +56,7 @@ const modeInfo = (mode: RoleActivationMode): { label: string, icon: string, cssC
     case "night_every":
       return { label: "Nacht: ∞", icon: "fa-moon", cssClass: styles.modeNightEvery }
     default:
-      return { label: "Tag/Passiv", icon: "fa-sun", cssClass: styles.modeDay }
+      return { label: "Tag", icon: "fa-sun", cssClass: styles.modeDay }
   }
 }
 
