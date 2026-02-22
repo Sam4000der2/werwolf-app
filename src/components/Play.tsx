@@ -63,6 +63,22 @@ const durationSortOrder = (duration: EffectDuration): number => {
   }
 }
 
+const effectDurationOptions: Array<{ duration: EffectDuration, label: string }> = [
+  { duration: "permanent", label: "Permanent" },
+  { duration: "night", label: "Nur Nacht" },
+  { duration: "next_day", label: "Nächster Tag" },
+]
+
+const getAllowedEffectDurations = (mode: GameState["phase"]["mode"], nightCount: number): EffectDuration[] => {
+  if (mode === "day") {
+    return ["permanent"]
+  }
+  if (nightCount === 0) {
+    return ["permanent"]
+  }
+  return ["night", "next_day"]
+}
+
 const roleWakesAtNight = (timing: RoleTiming): boolean => timing === "night"
 
 const countAlivePlayers = (players: Player[]) => players.reduce((c, p) => c + (p.alive ? 1 : 0), 0)
@@ -122,12 +138,23 @@ const Play = ({
     return availableEffects[effectA].name.localeCompare(availableEffects[effectB].name, "de")
   })
 
-  const selectableEffectIDs = React.useMemo(() => {
-    if (phase.mode === "night" && phase.nightCount === 0) {
-      return sortedEffectIDs.filter(effectID => availableEffects[effectID]?.duration === "permanent")
+  const allowedEffectDurations = React.useMemo(() => (
+    new Set<EffectDuration>(getAllowedEffectDurations(phase.mode, phase.nightCount))
+  ), [phase.mode, phase.nightCount])
+
+  const selectableDurationOptions = React.useMemo(() => (
+    effectDurationOptions.filter(option => allowedEffectDurations.has(option.duration))
+  ), [allowedEffectDurations])
+
+  const effectPickerHint = React.useMemo(() => {
+    if (phase.mode === "day") {
+      return "Tagsüber lassen sich nur permanente Effekte aktivieren."
     }
-    return sortedEffectIDs
-  }, [phase.mode, phase.nightCount, sortedEffectIDs, availableEffects])
+    if (phase.nightCount === 0) {
+      return "In Nacht 0 sind nur permanente Effekte auswählbar."
+    }
+    return "Ab Nacht 1 sind nur Nacht- und Nächster-Tag-Effekte aktivierbar."
+  }, [phase.mode, phase.nightCount])
 
   const { wakingRoleIDsTonight, additionalActiveRoleIDsTonight } = React.useMemo(() => {
     const wakingRoleIDs = new Set<string>()
@@ -216,7 +243,15 @@ const Play = ({
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
-    const newEffectDuration = (formData.get("newEffectDuration") || "permanent") as EffectDuration
+    const defaultDuration = selectableDurationOptions[0]?.duration || "permanent"
+    const rawDuration = formData.get("newEffectDuration")
+    const newEffectDuration = (rawDuration === "night" || rawDuration === "next_day" || rawDuration === "permanent")
+      ? rawDuration
+      : defaultDuration
+    if (!allowedEffectDurations.has(newEffectDuration)) {
+      alert(`Effekte vom Typ "${effectDurationLabel(newEffectDuration)}" sind in dieser Phase nicht aktivierbar.`)
+      return
+    }
     const effectIcon = String(formData.get("newEffectIcon") || "").trim() || (
       newEffectDuration === "night" ? "fa-moon" : newEffectDuration === "next_day" ? "fa-sun" : "fa-heart"
     )
@@ -370,18 +405,27 @@ const Play = ({
           {playerNames[selectedPlayer] ? ` · ${playerNames[selectedPlayer]}` : ""}
         </ListTitle>
         <List className="effect-list">
-          {selectableEffectIDs.map((effectID: string) => {
+          {sortedEffectIDs.map((effectID: string) => {
             const effect = availableEffects[effectID]
             if (!effect || !selectedPlayerData) {
               return null
             }
+            const effectIsActive = selectedPlayerData.effects.includes(effectID)
+            const effectCanBeActivated = allowedEffectDurations.has(effect.duration)
+            const effectActivationLocked = !effectCanBeActivated && !effectIsActive
             return (
               <ListItem key={effectID}>
                 <label className="left">
                   <Checkbox
                     inputId={effectID}
-                    checked={selectedPlayerData.effects.includes(effectID)}
-                    onChange={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}
+                    checked={effectIsActive}
+                    disabled={effectActivationLocked}
+                    onChange={() => {
+                      if (effectActivationLocked) {
+                        return
+                      }
+                      togglePlayerEffect({ playerID: selectedPlayer, effectID })
+                    }}
                     modifier="noborder"
                   />
                 </label>
@@ -399,9 +443,7 @@ const Play = ({
             )
           })}
         </List>
-        {phase.mode === "night" && phase.nightCount === 0 && (
-          <p className={styles.effectPickerHint}>In Nacht 0 sind hier nur permanente Effekte auswählbar.</p>
-        )}
+        <p className={styles.effectPickerHint}>{effectPickerHint}</p>
         <Button onClick={() => { setPlayerDetailsAreOpen(false); setNewEffectFormIsOpen(true) }} className="alert-dialog-button">Neuer Effekt</Button>
         <Button onClick={() => setPlayerDetailsAreOpen(false)} className="alert-dialog-button">Schließen</Button>
       </Dialog>
@@ -414,9 +456,17 @@ const Play = ({
           <div className="effect-form-wrapper">
             <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float />
             <div className={styles.durationPicker}>
-              <label><input type="radio" name="newEffectDuration" value="permanent" defaultChecked /> Permanent</label>
-              <label><input type="radio" name="newEffectDuration" value="night" /> Nur Nacht</label>
-              <label><input type="radio" name="newEffectDuration" value="next_day" /> Nächster Tag</label>
+              {selectableDurationOptions.map((option, index) => (
+                <label key={option.duration}>
+                  <input
+                    type="radio"
+                    name="newEffectDuration"
+                    value={option.duration}
+                    defaultChecked={index === 0}
+                  />
+                  {` ${option.label}`}
+                </label>
+              ))}
             </div>
             <div className="icon-list">
               {availableIcons.length > 0 ? availableIcons.map(iconID => {

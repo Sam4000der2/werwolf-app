@@ -14,7 +14,7 @@ const mapStateToProps = (state: RootState) => ({
   themeMode: state.ui.themeMode,
 })
 const connector = connect(mapStateToProps)
-const officialRepoURL = "https://github.com/kaktus42/werwolf-app"
+const forkRepoURL = "https://github.com/Sam4000der2/werwolf-app"
 const themeColorMetaSelector = 'meta[name="theme-color"]'
 
 const App = ({ currentPage, themeMode }: ConnectedProps<typeof connector>) => {
@@ -75,7 +75,7 @@ const App = ({ currentPage, themeMode }: ConnectedProps<typeof connector>) => {
     <div className="appShell">
       {content}
       <footer className="appFooter">
-        Version {packageInfo.version} · <a href={officialRepoURL} target="_blank" rel="noopener noreferrer">Offizielles Repo</a>
+        Version {packageInfo.version} · <a href={forkRepoURL} target="_blank" rel="noopener noreferrer">Fork-Repo</a>
       </footer>
     </div>
   )

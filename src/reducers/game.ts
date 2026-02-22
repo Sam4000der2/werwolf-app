@@ -971,8 +971,11 @@ const gameSlice = createSlice({
                 return state
             }
 
+            const players = removeEffectsByDuration(state.players, state.availableEffects, "night")
+
             return {
                 ...state,
+                players,
                 phase: {
                     ...state.phase,
                     mode: "night",
