@@ -1,194 +1,462 @@
 import React from 'react'
-import { Fab, Icon, Page, List, ListItem, ListTitle, AlertDialog, Button, ToolbarButton, Dialog, Checkbox, Input } from 'react-onsenui';
+import { Fab, Icon, Page, List, ListItem, ListTitle, AlertDialog, Button, ToolbarButton, Dialog, Checkbox, Input } from 'react-onsenui'
 import { connect, ConnectedProps } from 'react-redux'
 
-import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID } from '../reducers/game'
+import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID, advanceNightZero, advanceToDay, advanceToNight } from '../reducers/game'
 import { navTo } from '../reducers/ui'
-import Toolbar from './Toolbar';
-import { availableIcons } from '../config';
+import Toolbar from './Toolbar'
+import { availableIcons } from '../config'
+import styles from './Play.module.css'
 
-const mapStateToProps = (state: RootState) => ({ players: state.game.players, availableRoles: state.game.availableRoles, availableEffects: state.game.availableEffects })
-const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, createEffect, deleteEffect }
+const mapStateToProps = (state: RootState) => ({
+  players: state.game.players,
+  pickedRoles: state.game.pickedRoles,
+  availableRoles: state.game.availableRoles,
+  availableEffects: state.game.availableEffects,
+  roleTimings: state.game.roleTimings,
+  roleNightWakeRules: state.game.roleNightWakeRules,
+  phase: state.game.phase,
+})
+
+const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, createEffect, deleteEffect, advanceNightZero, advanceToDay, advanceToNight }
 const connector = connect(mapStateToProps, mapDispatch)
 
 const pStyle: React.CSSProperties = {
   textAlign: 'center',
   opacity: 0.6,
-};
+}
 
 type PlayProps = ConnectedProps<typeof connector>
-type PlayState = { endAlertIsOpen: boolean, playerDetailsAreOpen: boolean, newEffectFormIsOpen: boolean, selectedPlayer: number }
 
-class Play extends React.Component<PlayProps, PlayState> {
-  constructor(props: PlayProps) {
-    super(props)
-    this.state = { endAlertIsOpen: false, playerDetailsAreOpen: false, newEffectFormIsOpen: false, selectedPlayer: 0 }
+const effectDurationLabel = (duration: EffectDuration): string => {
+  switch (duration) {
+    case "night":
+      return "Nur Nacht"
+    case "next_day":
+      return "Nächster Tag"
+    default:
+      return "Permanent"
   }
+}
 
-  endGameOk() {
-    this.setState({ endAlertIsOpen: false });
-    this.props.fullReset();
-    this.props.navTo('prepare');
+const effectDurationClass = (duration: EffectDuration): string => {
+  switch (duration) {
+    case "night":
+      return styles.effectNight
+    case "next_day":
+      return styles.effectNextDay
+    default:
+      return styles.effectPermanent
   }
+}
 
-  endGameCancel() {
-    this.setState({ endAlertIsOpen: false });
+const durationSortOrder = (duration: EffectDuration): number => {
+  switch (duration) {
+    case "permanent":
+      return 0
+    case "night":
+      return 1
+    case "next_day":
+      return 2
+    default:
+      return 3
   }
+}
 
-  playerDetailsClose() {
-    this.setState({ playerDetailsAreOpen: false })
+const roleWakesAtNight = (timing: RoleTiming): boolean => timing === "night"
+
+const countAlivePlayers = (players: Player[]) => players.reduce((c, p) => c + (p.alive ? 1 : 0), 0)
+
+const countActiveEffects = (players: Player[], availableEffects: { [key: string]: Effect }, duration: EffectDuration): number => {
+  return players.reduce((count, player) => (
+    count + player.effects.filter(effectID => availableEffects[effectID]?.duration === duration).length
+  ), 0)
+}
+
+const wakesOnNight = (schedule: RoleNightSchedule | undefined, nightCount: number): boolean => {
+  switch (schedule || "from_night_one") {
+    case "night_zero_only":
+      return nightCount === 0
+    case "every_even_night_from_two":
+      return nightCount >= 2 && nightCount % 2 === 0
+    case "every_odd_night_from_one":
+      return nightCount >= 1 && nightCount % 2 === 1
+    default:
+      return nightCount >= 1
   }
+}
 
-  newEffectFormClose() {
-    this.setState({ playerDetailsAreOpen: true, newEffectFormIsOpen: false })
-  }
+const Play = ({
+  players,
+  pickedRoles,
+  availableRoles,
+  availableEffects,
+  roleTimings,
+  roleNightWakeRules,
+  phase,
+  togglePlayerAlive,
+  fullReset,
+  navTo,
+  togglePlayerEffect,
+  createEffect,
+  deleteEffect,
+  advanceNightZero,
+  advanceToDay,
+  advanceToNight,
+}: PlayProps) => {
+  const [endAlertIsOpen, setEndAlertIsOpen] = React.useState(false)
+  const [playerDetailsAreOpen, setPlayerDetailsAreOpen] = React.useState(false)
+  const [newEffectFormIsOpen, setNewEffectFormIsOpen] = React.useState(false)
+  const [playerNameDialogIsOpen, setPlayerNameDialogIsOpen] = React.useState(false)
+  const [selectedPlayer, setSelectedPlayer] = React.useState(0)
+  const [nameEditPlayerID, setNameEditPlayerID] = React.useState<number | null>(null)
+  const [nameInput, setNameInput] = React.useState("")
+  const [playerNames, setPlayerNames] = React.useState<{ [playerID: number]: string }>({})
 
-  submitNewEffect(event: React.SyntheticEvent) {
-    event.preventDefault()
-    this.newEffectFormClose()
-    const target = event.target as typeof event.target & { newEffectName: { value: string }, newEffectIcon: { value: string } }
-    const effect = { name: target.newEffectName.value, icon: target.newEffectIcon.value }
+  const selectedPlayerData = players[selectedPlayer]
+  const sortedEffectIDs = Object.keys(availableEffects).sort((effectA, effectB) => {
+    const durationDiff = durationSortOrder(availableEffects[effectA].duration) - durationSortOrder(availableEffects[effectB].duration)
+    if (durationDiff !== 0) {
+      return durationDiff
+    }
+    return availableEffects[effectA].name.localeCompare(availableEffects[effectB].name, "de")
+  })
 
-    if (!effect.name) {
-      effect.name = effect.icon ? effect.icon : (Math.random() + 1).toString(36).substring(2)
+  const selectableEffectIDs = React.useMemo(() => {
+    if (phase.mode === "night" && phase.nightCount === 0) {
+      return sortedEffectIDs.filter(effectID => availableEffects[effectID]?.duration === "permanent")
+    }
+    return sortedEffectIDs
+  }, [phase.mode, phase.nightCount, sortedEffectIDs, availableEffects])
+
+  const { wakingRoleIDsTonight, additionalActiveRoleIDsTonight } = React.useMemo(() => {
+    const wakingRoleIDs = new Set<string>()
+    const additionalActiveRoleIDs = new Set<string>()
+    if (phase.mode !== "night") {
+      return {
+        wakingRoleIDsTonight: wakingRoleIDs,
+        additionalActiveRoleIDsTonight: additionalActiveRoleIDs,
+      }
     }
 
-    const effectID = generateEffectID(effect.name)
+    Object.entries(pickedRoles).forEach(([roleID, count]) => {
+      if (count <= 0 || !roleWakesAtNight(roleTimings[roleID] || "day")) {
+        return
+      }
 
-    if (effectID in this.props.availableEffects) {
-      alert(`Effect "${effect}" with ID "${effectID}" already exists`)
+      const wakeRule = roleNightWakeRules[roleID] || {}
+      const fallbackSchedule = wakeRule.schedule
+      const factionSchedule = wakeRule.factionSchedule || fallbackSchedule
+      const additionalRoleSchedule = wakeRule.additionalRoleSchedule || fallbackSchedule
+
+      const wakeAsFaction = Boolean(wakeRule.wakeAsFaction && wakeRule.factionID)
+      const wakesAsFactionTonight = wakeAsFaction && wakesOnNight(factionSchedule, phase.nightCount)
+      const wakesAsAdditionalRoleTonight = Boolean(wakeRule.hasAdditionalRoleWake) && wakesOnNight(additionalRoleSchedule, phase.nightCount)
+
+      const wakesAsRoleTonight = (!wakeAsFaction && wakesOnNight(fallbackSchedule, phase.nightCount))
+        || wakesAsAdditionalRoleTonight
+
+      if (wakesAsFactionTonight || wakesAsRoleTonight) {
+        wakingRoleIDs.add(roleID)
+      }
+
+      if (wakesAsFactionTonight && wakesAsAdditionalRoleTonight) {
+        additionalActiveRoleIDs.add(roleID)
+      }
+    })
+
+    return {
+      wakingRoleIDsTonight: wakingRoleIDs,
+      additionalActiveRoleIDsTonight: additionalActiveRoleIDs,
+    }
+  }, [phase.mode, phase.nightCount, pickedRoles, roleTimings, roleNightWakeRules])
+
+  const endGameOk = () => {
+    setEndAlertIsOpen(false)
+    fullReset()
+    navTo('prepare')
+  }
+
+  const closeNewEffectForm = () => {
+    setNewEffectFormIsOpen(false)
+    setPlayerDetailsAreOpen(true)
+  }
+
+  const openPlayerNameDialog = (playerID: number) => {
+    setNameEditPlayerID(playerID)
+    setNameInput(playerNames[playerID] || "")
+    setPlayerNameDialogIsOpen(true)
+  }
+
+  const closePlayerNameDialog = () => {
+    setPlayerNameDialogIsOpen(false)
+    setNameEditPlayerID(null)
+    setNameInput("")
+  }
+
+  const savePlayerName = () => {
+    if (nameEditPlayerID === null) {
       return
     }
 
-    this.props.createEffect({ newEffect: effect })
-    this.props.togglePlayerEffect({ playerID: this.state.selectedPlayer, effectID })
-
-    target.newEffectName.value = ""
+    const normalizedName = nameInput.trim()
+    setPlayerNames(previousNames => {
+      const nextNames = { ...previousNames }
+      if (normalizedName.length > 0) {
+        nextNames[nameEditPlayerID] = normalizedName
+      } else {
+        delete nextNames[nameEditPlayerID]
+      }
+      return nextNames
+    })
+    closePlayerNameDialog()
   }
 
-  render() {
-    let { players, togglePlayerAlive, togglePlayerEffect, deleteEffect } = this.props
-    let { endAlertIsOpen, playerDetailsAreOpen, newEffectFormIsOpen, selectedPlayer } = this.state
-    return (
-      <Page
-        renderToolbar={() => (<Toolbar />)}
-        renderFixed={() =>
-          <div>
-            <Fab position="bottom left" onClick={() => this.setState({ endAlertIsOpen: true })}><Icon icon='fa-undo' /></Fab>
-          </div>
-        }
-      >
+  const submitNewEffect = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-        <p style={pStyle}>
-          Dein Dorf hat <span id="total_cnt">{countAlivePlayers(players)} von {players.length}</span> Einwohnern
-        </p>
-        <div className="scrollable_content">
-          <List
-            dataSource={players}
-            renderRow={(player: Player, playerID: number) => (
-              <ListItem key={playerID} className={'player' + (!player.alive ? ' isDead' : '')}>
-                <div>
-                  {playerID + 1}: {this.props.availableRoles[player.role]}
-                </div>
-                <div>
-                  {player.effects.map(effectID => {
-                    return (
-                      <Icon icon={this.props.availableEffects[effectID].icon} />
-                    )
-                  })}
-                </div>
-                <div>
-                  <button onClick={() => togglePlayerAlive(playerID)} className=" button button--outline">
-                    <Icon icon={player.alive ? 'skull-crossbones' : 'medkit'} />
-                  </button>
-                  <ToolbarButton>
-                    <Icon icon="bars" onClick={() => this.setState({ playerDetailsAreOpen: true, selectedPlayer: playerID })} />
-                  </ToolbarButton>
-                </div>
-              </ListItem>
-            )}
-          />
+    const formData = new FormData(event.currentTarget)
+    const newEffectDuration = (formData.get("newEffectDuration") || "permanent") as EffectDuration
+    const effectIcon = String(formData.get("newEffectIcon") || "").trim() || (
+      newEffectDuration === "night" ? "fa-moon" : newEffectDuration === "next_day" ? "fa-sun" : "fa-heart"
+    )
+
+    let effectName = String(formData.get("newEffectName") || "").trim()
+    if (!effectName) {
+      effectName = effectDurationLabel(newEffectDuration)
+    }
+
+    const effectID = generateEffectID(effectName)
+    if (effectID in availableEffects) {
+      alert(`Effekt "${effectName}" existiert bereits.`)
+      return
+    }
+
+    createEffect({
+      newEffect: {
+        name: effectName,
+        icon: effectIcon,
+        duration: newEffectDuration,
+      }
+    })
+    togglePlayerEffect({ playerID: selectedPlayer, effectID })
+    closeNewEffectForm()
+    event.currentTarget.reset()
+  }
+
+  return (
+    <Page
+      renderToolbar={() => (<Toolbar />)}
+      renderFixed={() =>
+        <div>
+          <Fab position="bottom left" onClick={() => setEndAlertIsOpen(true)}><Icon icon='fa-undo' /></Fab>
+        </div>
+      }
+    >
+      <p style={pStyle}>
+        Dein Dorf hat <span id="total_cnt">{countAlivePlayers(players)} von {players.length}</span> Einwohnern
+      </p>
+
+      <section className={styles.phasePanel}>
+        <div className={styles.phaseHeader}>
+          <div className={styles.phaseHeaderLeft}>
+            <span className={`${styles.phaseBadge} ${phase.mode === "night" ? styles.phaseNight : styles.phaseDay}`}>
+              {phase.mode === "night" ? `Nacht ${phase.nightCount}` : `Tag ${phase.dayCount}`}
+            </span>
+            <span className={styles.phaseCounter}>Tag {phase.dayCount} · Nacht {phase.nightCount}</span>
+          </div>
+          <Button
+            modifier="quiet"
+            onClick={() => {
+              if (phase.mode === "night") {
+                if (phase.nightCount === 0) {
+                  advanceNightZero()
+                } else {
+                  advanceToDay()
+                }
+                return
+              }
+              advanceToNight()
+            }}
+          >
+            {phase.mode === "night" ? "Nacht beenden" : "Tag beenden"}
+          </Button>
         </div>
 
+        {phase.mode === "night" ? (
+          <p className={styles.sectionHint}>Rollen, die in dieser Nacht aufwachen, sind unten visuell markiert.</p>
+        ) : (
+          <p className={styles.sectionHint}>Beim Wechsel zur Nacht werden „Nächster Tag“-Effekte automatisch entfernt.</p>
+        )}
 
-        <AlertDialog isOpen={endAlertIsOpen} isCancelable={true} onCancel={this.endGameCancel.bind(this)}>
-          <div className="alert-dialog-title">Warnung!</div>
-          <div className="alert-dialog-content">
-            Soll das aktuelle Spiel wirklich beendet werden?
-          </div>
-          <div className="alert-dialog-footer flex">
-            <Button onClick={this.endGameOk.bind(this)} className="alert-dialog-button">
-              Ja
-            </Button>
-            <Button onClick={this.endGameCancel.bind(this)} className="alert-dialog-button">
-              Nein
-            </Button>
-          </div>
-        </AlertDialog>
+        <p className={styles.sectionMuted}>
+          Aktiv: {countActiveEffects(players, availableEffects, "permanent")} permanent · {countActiveEffects(players, availableEffects, "night")} Nacht · {countActiveEffects(players, availableEffects, "next_day")} nächster Tag
+        </p>
+      </section>
 
-        <Dialog isOpen={playerDetailsAreOpen} isCancelable={true} onCancel={this.playerDetailsClose.bind(this)}>
-          <ListTitle>
-            {selectedPlayer + 1}: {this.props.availableRoles[players[selectedPlayer].role]}
-          </ListTitle>
-          <List
-            className="effect-list"
-            dataSource={Object.keys(this.props.availableEffects)}
-            renderRow={(effectID: string) => (
+      <div className="scrollable_content">
+        <List>
+          {players.map((player: Player, playerID: number) => {
+            const roleWakesTonight = phase.mode === "night" && wakingRoleIDsTonight.has(player.role)
+            const roleHasAdditionalWakeTonight = phase.mode === "night" && additionalActiveRoleIDsTonight.has(player.role)
+            const wakeBadgeClassName = `${styles.wakeTonightBadge}${roleWakesTonight ? ` ${styles.wakeTonightBadgeActive}` : ""}`
+            return (
+            <ListItem key={playerID} className={`player${!player.alive ? ' isDead' : ''}${roleWakesTonight ? ` ${styles.playerWakeTonight}` : ''}`}>
+              <div className={styles.playerRoleBlock}>
+                <div className={styles.playerRoleLine}>
+                  <span>{playerID + 1}: {availableRoles[player.role]}</span>
+                  <span className={wakeBadgeClassName}>wach</span>
+                  {roleHasAdditionalWakeTonight && (
+                    <span className={styles.additionalWakeBadge}>Aktiv</span>
+                  )}
+                  {phase.mode === "day" && (
+                    <button
+                      className={styles.playerNameEditButton}
+                      onClick={() => openPlayerNameDialog(playerID)}
+                      aria-label={`Name für Spieler ${playerID + 1} bearbeiten`}
+                    >
+                      <Icon icon="fa-pen" />
+                    </button>
+                  )}
+                </div>
+                {playerNames[playerID] && (
+                  <div className={styles.playerNameLabel}>{playerNames[playerID]}</div>
+                )}
+              </div>
+              <div className={styles.playerEffects}>
+                {player.effects.map(effectID => {
+                  const effect = availableEffects[effectID]
+                  if (!effect) {
+                    return null
+                  }
+                  return (
+                    <span key={effectID} className={`${styles.effectChip} ${effectDurationClass(effect.duration)}`} title={`${effect.name} (${effectDurationLabel(effect.duration)})`}>
+                      <Icon icon={effect.icon} />
+                    </span>
+                  )
+                })}
+              </div>
+              <div>
+                <button onClick={() => togglePlayerAlive(playerID)} className=" button button--outline">
+                  <Icon icon={player.alive ? 'skull-crossbones' : 'medkit'} />
+                </button>
+                <ToolbarButton>
+                  <Icon icon="bars" onClick={() => { setPlayerDetailsAreOpen(true); setSelectedPlayer(playerID) }} />
+                </ToolbarButton>
+              </div>
+            </ListItem>
+          )})}
+        </List>
+      </div>
+
+      <AlertDialog isOpen={endAlertIsOpen} isCancelable={true} onCancel={() => setEndAlertIsOpen(false)}>
+        <div className="alert-dialog-title">Warnung!</div>
+        <div className="alert-dialog-content">
+          Soll das aktuelle Spiel wirklich beendet werden?
+        </div>
+        <div className="alert-dialog-footer flex">
+          <Button onClick={endGameOk} className="alert-dialog-button">
+            Ja
+          </Button>
+          <Button onClick={() => setEndAlertIsOpen(false)} className="alert-dialog-button">
+            Nein
+          </Button>
+        </div>
+      </AlertDialog>
+
+      <Dialog isOpen={playerDetailsAreOpen && !!selectedPlayerData} isCancelable={true} onCancel={() => setPlayerDetailsAreOpen(false)}>
+        <ListTitle>
+          {selectedPlayer + 1}: {selectedPlayerData ? availableRoles[selectedPlayerData.role] : ""}
+          {playerNames[selectedPlayer] ? ` · ${playerNames[selectedPlayer]}` : ""}
+        </ListTitle>
+        <List className="effect-list">
+          {selectableEffectIDs.map((effectID: string) => {
+            const effect = availableEffects[effectID]
+            if (!effect || !selectedPlayerData) {
+              return null
+            }
+            return (
               <ListItem key={effectID}>
                 <label className="left">
                   <Checkbox
                     inputId={effectID}
-                    checked={players[selectedPlayer].effects.includes(effectID)}
+                    checked={selectedPlayerData.effects.includes(effectID)}
                     onChange={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}
                     modifier="noborder"
                   />
                 </label>
                 <label htmlFor={effectID} className="icon-text">
-                  <Icon icon={this.props.availableEffects[effectID].icon} />
-                  {this.props.availableEffects[effectID].name}
+                  <Icon icon={effect.icon} />
+                  {effect.name}
+                  <span className={`${styles.effectDurationLabel} ${effectDurationClass(effect.duration)}`}>
+                    {effectDurationLabel(effect.duration)}
+                  </span>
                 </label>
                 <button className="right button--dialog" onClick={() => deleteEffect(effectID)}>
                   <Icon icon="trash" />
                 </button>
               </ListItem>
-            )}
-          />
-          <Button onClick={() => this.setState({ playerDetailsAreOpen: false, newEffectFormIsOpen: true })} className="alert-dialog-button">Neuer Effekt</Button>
-          <Button onClick={this.playerDetailsClose.bind(this)} className="alert-dialog-button">Schließen</Button>
-        </Dialog>
+            )
+          })}
+        </List>
+        {phase.mode === "night" && phase.nightCount === 0 && (
+          <p className={styles.effectPickerHint}>In Nacht 0 sind hier nur permanente Effekte auswählbar.</p>
+        )}
+        <Button onClick={() => { setPlayerDetailsAreOpen(false); setNewEffectFormIsOpen(true) }} className="alert-dialog-button">Neuer Effekt</Button>
+        <Button onClick={() => setPlayerDetailsAreOpen(false)} className="alert-dialog-button">Schließen</Button>
+      </Dialog>
 
-        <Dialog isOpen={newEffectFormIsOpen} isCancelable={true} onCancel={this.newEffectFormClose.bind(this)}>
-          <ListTitle>
-            Neuer Effekt
-          </ListTitle>
-          <form onSubmit={this.submitNewEffect.bind(this)}>
-            <div className="effect-form-wrapper">
+      <Dialog isOpen={newEffectFormIsOpen} isCancelable={true} onCancel={closeNewEffectForm}>
+        <ListTitle>
+          Neuer Effekt
+        </ListTitle>
+        <form onSubmit={submitNewEffect}>
+          <div className="effect-form-wrapper">
             <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float />
-              <div className="icon-list">
-                {availableIcons.length > 0 ? availableIcons.map(iconID => {
-                  return (
-                    <div className="icon-list-element" key={iconID}>
-                      <input type="radio" id={iconID} name="newEffectIcon" value={iconID} className="hidden" />
-                      <label htmlFor={iconID}>
-                        <Button className="button--outline button--effect" >
-                          <Icon icon={iconID} />
-                        </Button>
-                      </label>
-                    </div>
-                  )
-                }): "No icons available"}
-              </div>
+            <div className={styles.durationPicker}>
+              <label><input type="radio" name="newEffectDuration" value="permanent" defaultChecked /> Permanent</label>
+              <label><input type="radio" name="newEffectDuration" value="night" /> Nur Nacht</label>
+              <label><input type="radio" name="newEffectDuration" value="next_day" /> Nächster Tag</label>
             </div>
-            <button type="submit" className="alert-dialog-button">Speichern</button>
-          </form>
-          <Button onClick={this.newEffectFormClose.bind(this)} className="alert-dialog-button">Abbrechen</Button>
-        </Dialog>
+            <div className="icon-list">
+              {availableIcons.length > 0 ? availableIcons.map(iconID => {
+                return (
+                  <div className="icon-list-element" key={iconID}>
+                    <input type="radio" id={iconID} name="newEffectIcon" value={iconID} className="hidden" />
+                    <label htmlFor={iconID}>
+                      <Button className="button--outline button--effect" >
+                        <Icon icon={iconID} />
+                      </Button>
+                    </label>
+                  </div>
+                )
+              }) : "No icons available"}
+            </div>
+          </div>
+          <button type="submit" className="alert-dialog-button">Speichern</button>
+        </form>
+        <Button onClick={closeNewEffectForm} className="alert-dialog-button">Abbrechen</Button>
+      </Dialog>
 
-      </Page >
-    );
-  }
+      <Dialog isOpen={playerNameDialogIsOpen && nameEditPlayerID !== null} isCancelable={true} onCancel={closePlayerNameDialog}>
+        <ListTitle>
+          Name für Spieler {nameEditPlayerID !== null ? nameEditPlayerID + 1 : ""}
+        </ListTitle>
+        <div className={styles.nameDialogBody}>
+          <Input
+            value={nameInput}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNameInput(event.currentTarget.value)}
+            modifier="material"
+            placeholder="Name eingeben"
+            float
+          />
+        </div>
+        <Button onClick={savePlayerName} className="alert-dialog-button">Speichern</Button>
+        <Button onClick={closePlayerNameDialog} className="alert-dialog-button">Abbrechen</Button>
+      </Dialog>
+
+    </Page >
+  )
 }
 
-const countAlivePlayers = (players: Player[]) => players.reduce((c, p) => c + (p.alive ? 1 : 0), 0)
-
-export default connector(Play);
+export default connector(Play)

@@ -1,0 +1,246 @@
+.phasePanel {
+    margin: 0 12px 12px 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--panel-bg-start) 0%, var(--panel-bg-end) 100%);
+    box-shadow: var(--card-shadow);
+}
+
+.phaseHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.phaseHeaderLeft {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.phaseBadge {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.phaseCounter {
+    font-size: 0.74rem;
+    opacity: 0.72;
+}
+
+.phaseNight {
+    background: var(--night-soft-bg);
+    color: var(--night-soft-text);
+}
+
+.phaseDay {
+    background: var(--warning-soft-bg);
+    color: var(--warning-soft-text);
+}
+
+.sectionHint {
+    margin: 8px 0 6px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.sectionMuted {
+    margin: 0;
+    opacity: 0.7;
+    font-size: 0.78rem;
+}
+
+.nightCallList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.nightCallRow {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(120px, auto) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--soft-row-bg);
+}
+
+.nightCallRole {
+    font-weight: 600;
+    font-size: 0.86rem;
+}
+
+.nightCallMeta {
+    font-size: 0.76rem;
+    opacity: 0.72;
+}
+
+.nightCallCheck {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    justify-self: end;
+}
+
+.nightCallCheck input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+}
+
+.awakeRoleList {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.awakeRoleChip {
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.76rem;
+    background: var(--chip-bg);
+}
+
+.playerEffects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.playerWakeTonight {
+    box-shadow: inset 3px 0 0 var(--wake-border);
+    background: var(--wake-highlight);
+}
+
+.playerRoleBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.playerRoleLine {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.wakeTonightBadge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 0.68rem;
+    color: transparent;
+    background: transparent;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.wakeTonightBadgeActive {
+    color: var(--accent-soft-text);
+    background: var(--accent-soft-bg);
+    border-color: var(--accent-soft-border);
+}
+
+.additionalWakeBadge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 0.68rem;
+    color: var(--warning-soft-text);
+    background: var(--warning-soft-bg);
+    border: 1px solid var(--border-strong);
+    user-select: none;
+}
+
+.playerNameEditButton {
+    border: none;
+    background: transparent;
+    color: var(--accent-soft-text);
+    opacity: 0.78;
+    padding: 0 3px;
+    cursor: pointer;
+}
+
+.playerNameLabel {
+    font-size: 0.74rem;
+    color: var(--muted-text);
+    opacity: 0.8;
+}
+
+.nameDialogBody {
+    padding: 8px 10px 2px 10px;
+}
+
+.effectPickerHint {
+    margin: 4px 0 6px 0;
+    font-size: 0.75rem;
+    opacity: 0.75;
+    color: var(--accent-soft-text);
+}
+
+.effectChip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+}
+
+.effectDurationLabel {
+    margin-left: 8px;
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 0.68rem;
+}
+
+.effectPermanent {
+    color: var(--pink-soft-text);
+    background: var(--pink-soft-bg);
+}
+
+.effectNight {
+    color: var(--night-soft-text);
+    background: var(--night-soft-bg);
+}
+
+.effectNextDay {
+    color: var(--warning-soft-text);
+    background: var(--warning-soft-bg);
+}
+
+.durationPicker {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.durationPicker label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+@media (max-width: 640px) {
+    .phaseHeader {
+        flex-wrap: wrap;
+    }
+
+    .nightCallRow {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
