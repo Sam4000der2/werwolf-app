@@ -374,9 +374,10 @@ const loadDefaultExampleDecks = (): SavedDeck[] => {
             id: deckTemplate.id,
             name: deckTemplate.name,
             pickedRoles: deckTemplate.pickedRoles,
-            customRoles: {},
-            roleTimings: {},
-            roleNightWakeRules: {},
+            customRoles: deckTemplate.customRoles || {},
+            availableFactions: deckTemplate.availableFactions || {},
+            roleTimings: deckTemplate.roleTimings || {},
+            roleNightWakeRules: deckTemplate.roleNightWakeRules || {},
             createdAt: now,
             updatedAt: now,
         }, deckIdx))

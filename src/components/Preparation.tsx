@@ -1,4 +1,5 @@
 import React from 'react'
+import { flushSync } from 'react-dom'
 import { Button, Fab, Icon, List, ListItem, Page } from 'react-onsenui';
 import { connect, ConnectedProps } from 'react-redux'
 
@@ -156,6 +157,7 @@ const Preparation = ({
   const deckFileInputRef = React.useRef<HTMLInputElement>(null)
   const [deckName, setDeckName] = React.useState("")
   const [statusText, setStatusText] = React.useState("")
+  const [dangerActionsArmed, setDangerActionsArmed] = React.useState(false)
 
   const downloadRolesBackup = () => {
     const backup: RolesBackup = {
@@ -188,6 +190,7 @@ const Preparation = ({
       const parsedBackup = JSON.parse(backupText)
       const restoredCustomRoles = extractCustomRoles(parsedBackup)
       restoreCustomRoles(restoredCustomRoles)
+      setDangerActionsArmed(false)
       setStatusText("Rollen wurden wiederhergestellt.")
     } catch {
       alert("Backup konnte nicht gelesen werden. Bitte eine gültige JSON-Datei auswählen.")
@@ -250,6 +253,7 @@ const Preparation = ({
       if (hasDecks) {
         importSavedDecks(importedDecks)
       }
+      setDangerActionsArmed(false)
 
       setStatusText("Deck-Backup importiert.")
     } catch {
@@ -257,6 +261,12 @@ const Preparation = ({
     }
 
     input.value = ""
+  }
+
+  const overwriteDeck = (deckID: string, deckName: string) => {
+    overwriteSavedDeck({ deckID })
+    setDangerActionsArmed(false)
+    setStatusText(`Deck "${deckName}" aktualisiert.`)
   }
 
   const renderSavedDeck = (deck: SavedDeck) => (
@@ -270,12 +280,30 @@ const Preparation = ({
       <div className="right">
         <div className={styles.deckRowActions}>
           <Button modifier="quiet" onClick={() => { loadSavedDeck(deck.id); setStatusText(`Deck "${deck.name}" geladen.`) }}>Laden</Button>
-          <Button modifier="quiet" onClick={() => { overwriteSavedDeck({ deckID: deck.id }); setStatusText(`Deck "${deck.name}" aktualisiert.`) }}>Akt.</Button>
+          <Button modifier="quiet" disabled={!dangerActionsArmed} onClick={() => overwriteDeck(deck.id, deck.name)}>Akt.</Button>
           <Button modifier="quiet" onClick={() => { deleteSavedDeck(deck.id); setStatusText(`Deck "${deck.name}" gelöscht.`) }}><Icon icon='trash' /></Button>
         </div>
       </div>
     </ListItem>
   )
+
+  const resetDisplayedRoles = () => {
+    restoreCustomRoles({})
+    resetRoles()
+    setDangerActionsArmed(false)
+    setStatusText("Angezeigte Rollen zurückgesetzt.")
+  }
+
+  const startRoleDeal = () => {
+    if (roleCount <= 0) {
+      return
+    }
+
+    flushSync(() => {
+      navTo('deal')
+    })
+    dealRoles()
+  }
 
   return (
     <Page
@@ -283,7 +311,7 @@ const Preparation = ({
       renderFixed={() =>
         <div>
           <Fab position="bottom left" onClick={() => resetRoles()}><Icon icon='fa-undo' /></Fab>
-          <Fab position="bottom right" onClick={() => { dealRoles(); navTo('deal') }} disabled={roleCount === 0}><Icon icon='fa-play' /></Fab>
+          <Fab position="bottom right" onClick={startRoleDeal} disabled={roleCount === 0}><Icon icon='fa-play' /></Fab>
         </div>
       }
     >
@@ -332,6 +360,17 @@ const Preparation = ({
                 <Button modifier="quiet" onClick={downloadRolesBackup}>Export</Button>
                 <Button modifier="quiet" onClick={requestRoleRestore}>Import</Button>
               </div>
+            </div>
+            <div className={styles.roleResetControls}>
+              <label className={styles.roleResetToggle}>
+                <input
+                  type="checkbox"
+                  checked={dangerActionsArmed}
+                  onChange={(event) => setDangerActionsArmed(event.currentTarget.checked)}
+                />
+                Reset/Überschreiben aktivieren
+              </label>
+              <Button modifier="quiet" disabled={!dangerActionsArmed} onClick={resetDisplayedRoles}>Rollen zurücksetzen</Button>
             </div>
           </div>
         </details>

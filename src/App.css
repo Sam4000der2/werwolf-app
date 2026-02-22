@@ -18,7 +18,7 @@
   color: var(--muted-text);
   background: linear-gradient(180deg, transparent 0%, var(--app-bg) 90%);
   z-index: 2500;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .appFooterContent {
@@ -29,6 +29,7 @@
   border-radius: 999px;
   background: var(--surface-bg);
   border: 1px solid var(--border-color);
+  pointer-events: auto;
 }
 
 .appFooterLink {

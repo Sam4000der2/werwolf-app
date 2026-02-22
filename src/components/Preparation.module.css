@@ -186,6 +186,28 @@
   gap: 4px;
 }
 
+.roleResetControls {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.roleResetToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted-text);
+}
+
+.roleResetToggle input {
+  accent-color: var(--accent);
+}
+
 .roleTimingHint {
   margin: 0 12px;
   font-size: 0.79rem;
@@ -248,6 +270,10 @@
   }
 
   .secondaryBackup {
+    flex-wrap: wrap;
+  }
+
+  .roleResetControls {
     flex-wrap: wrap;
   }
 }
