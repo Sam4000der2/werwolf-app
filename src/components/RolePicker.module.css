@@ -1,330 +1,333 @@
-.factionPanel {
-    margin: 0 0 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background: var(--surface-soft);
-    overflow: hidden;
+.rolePickerContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 20px;
 }
 
-.factionPanel summary {
-    cursor: pointer;
-    user-select: none;
-    padding: 8px 10px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--app-text);
+.searchBarWrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface-bg);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  margin: 0 -10px;
 }
 
-.factionPanelBody {
-    padding: 8px 10px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.searchField {
+  width: 100%;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 19px;
+  font-size: 0.9rem;
+  background: var(--surface-soft);
+  color: var(--app-text);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+  box-sizing: border-box;
 }
 
-.factionHint {
-    margin: 0;
-    font-size: 0.74rem;
-    color: var(--muted-text);
+.searchField:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface-bg);
+  box-shadow: 0 0 0 3px var(--accent-soft-bg);
 }
 
-.factionCreateRow {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+.categoryTitle {
+  margin: 16px 12px 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.inlineInput {
-    flex: 1;
-    min-width: 0;
-    height: 32px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0 8px;
-    font-size: 0.86rem;
-    color: var(--app-text);
-    background: var(--surface-bg);
+.categoryTitle::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-soft-border), transparent);
 }
 
-.factionChipRow {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.factionChip {
-    border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 0.72rem;
-    background: var(--surface-bg);
-    border: 1px solid var(--border-color);
-    color: var(--app-text);
+.roleRow {
+  border-bottom: 1px solid var(--soft-row-bg);
 }
 
 .roleRow :global(.list-item__center) {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 0;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    display: block;
-}
-
-.roleRow :global(.list-item__right) {
-    flex: 0 0 auto;
-    min-width: 0;
-    padding-left: 4px !important;
-    padding-right: 0 !important;
-    display: flex;
-    align-items: flex-start;
+  padding-right: 0 !important;
 }
 
 .rowContent {
-    --mode-col-width: 176px;
-    --mode-offset-col-width: 2px;
-    display: grid;
-    grid-template-columns: auto var(--mode-col-width) var(--mode-offset-col-width);
-    grid-template-rows: auto auto;
-    grid-template-areas:
-        "role mode filler"
-        "details details details";
-    column-gap: 4px;
-    row-gap: 6px;
-    align-items: start;
-    width: 100%;
-    min-width: 0;
-    text-align: left;
-}
-
-/* Force table-like layout inside the Onsen "center" slot. */
-.roleRow :global(.center).rowContent,
-.roleRow :global(.list-item__center).rowContent {
-    display: grid !important;
-    grid-template-columns: auto var(--mode-col-width) var(--mode-offset-col-width) !important;
-    grid-template-rows: auto auto !important;
-    grid-template-areas:
-        "role mode filler"
-        "details details details" !important;
-    width: 100% !important;
-    min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
 }
 
 .roleTitleRow {
-    grid-area: role;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
 }
 
 .roleName {
-    flex: 1;
-    min-width: 0;
-    font-weight: 700;
-    color: var(--app-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.roleOptions {
-    width: 100%;
-    grid-area: details;
-    min-width: 0;
-}
-
-.roleOptionsPlaceholder {
-    grid-area: details;
-    min-height: 0;
-}
-
-.roleOptions summary {
-    cursor: pointer;
-    user-select: none;
-    font-size: 0.74rem;
-    color: var(--muted-text);
-}
-
-.roleOptionsBody {
-    margin-top: 4px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--surface-bg);
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.optionLabel {
-    font-size: 0.71rem;
-    color: var(--muted-text);
-}
-
-.optionSelect {
-    width: 100%;
-    min-height: 30px;
-    border: 1px solid var(--border-color);
-    border-radius: 7px;
-    background: var(--surface-bg);
-    color: var(--app-text);
-    font-size: 0.82rem;
-    padding: 2px 6px;
-}
-
-.checkboxLabel {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
-    color: var(--app-text);
-}
-
-.counter {
-    min-width: 34px;
-    text-align: center;
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--app-text);
-}
-
-.modeColumn {
-    grid-area: mode;
-    width: 100%;
-    min-width: 0;
-    align-self: start;
-    justify-self: stretch;
-}
-
-.countColumn {
-    display: flex;
-    width: auto;
-    justify-content: flex-end;
-    align-items: center;
-    align-self: flex-start;
-    min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--app-text);
 }
 
 .deleteRoleButton {
-    min-width: 30px;
-    height: 30px;
-    line-height: 30px;
-    padding: 0 8px;
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: transparent !important;
+  color: var(--danger) !important;
+  border: none !important;
 }
 
-.countStepper {
-    display: grid;
-    grid-template-columns: 32px minmax(34px, auto) 32px;
-    align-items: center;
-    column-gap: 4px;
-}
-
-.stepButton {
-    min-width: 32px !important;
-    width: 32px !important;
-    min-height: 32px;
-    height: 32px;
-    padding: 0 !important;
-    line-height: 32px;
+.modeColumn {
+  display: flex;
+  align-items: center;
 }
 
 .modeButton {
-    width: 100%;
-    min-width: 0;
-    padding: 3px 7px;
-    border-radius: 12px;
-    font-size: 0.72rem;
-    white-space: nowrap;
-    line-height: 1.05;
-    text-align: center;
-    border: 1px solid transparent;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  padding: 2px 10px !important;
+  border-radius: 12px !important;
+  min-height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  text-transform: none !important;
 }
 
 .modeDay {
-    background-color: var(--warning-soft-bg);
-    color: var(--warning-soft-text);
+  background-color: var(--warning-soft-bg) !important;
+  color: var(--warning-soft-text) !important;
+  border: 1px solid rgba(243, 176, 31, 0.3) !important;
 }
 
 .modeNightEvery {
-    background-color: var(--night-soft-bg);
-    color: var(--night-soft-text);
+  background-color: var(--night-soft-bg) !important;
+  color: var(--night-soft-text) !important;
+  border: 1px solid rgba(67, 96, 210, 0.3) !important;
 }
 
 .modeNightZero {
-    background-color: var(--violet-soft-bg);
-    color: var(--violet-soft-text);
+  background-color: var(--violet-soft-bg) !important;
+  color: var(--violet-soft-text) !important;
+  border: 1px solid rgba(123, 93, 214, 0.3) !important;
 }
 
-.modeNightEven {
-    background-color: var(--warning-soft-bg);
-    color: var(--warning-soft-text);
+.modeNightEven, .modeNightOdd {
+  background-color: var(--pink-soft-bg) !important;
+  color: var(--pink-soft-text) !important;
+  border: 1px solid rgba(193, 41, 143, 0.3) !important;
 }
 
-.modeNightOdd {
-    background-color: var(--green-soft-bg);
-    color: var(--green-soft-text);
+.roleOptions {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-@media (max-width: 640px) {
-    .rowContent {
-        --mode-col-width: 164px;
-        --mode-offset-col-width: 1px;
-        grid-template-columns: auto var(--mode-col-width) var(--mode-offset-col-width);
-        column-gap: 3px;
-        row-gap: 5px;
-    }
-
-    .modeButton {
-        font-size: 0.66rem;
-        padding: 2px 6px;
-    }
-
-    .roleName {
-        font-size: 0.86rem;
-    }
-
-    .countStepper {
-        grid-template-columns: 30px minmax(30px, auto) 30px;
-        column-gap: 3px;
-    }
-
-    .stepButton {
-        min-width: 30px !important;
-        width: 30px !important;
-        min-height: 30px;
-        height: 30px;
-        line-height: 30px;
-    }
-
-    .counter {
-        min-width: 30px;
-        font-size: 0.82rem;
-    }
-
-    .factionCreateRow {
-        flex-wrap: wrap;
-    }
+.roleOptions summary {
+  padding: 6px 10px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--muted-text);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-@media (max-width: 430px) {
-    .rowContent {
-        --mode-col-width: 152px;
-        --mode-offset-col-width: 1px;
-        grid-template-columns: auto var(--mode-col-width) var(--mode-offset-col-width);
-        column-gap: 3px;
-    }
+.roleOptions summary::-webkit-details-marker {
+  display: none;
+}
 
-    .modeButton {
-        font-size: 0.62rem;
-    }
+.roleOptions summary::after {
+  content: "▾";
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
 
-    .roleName {
-        font-size: 0.82rem;
-    }
+.roleOptions[open] summary::after {
+  content: "▴";
+}
+
+.roleOptionsBody {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.optionLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted-text);
+  text-transform: uppercase;
+}
+
+.optionSelect {
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: var(--app-text);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.countColumn {
+  padding: 4px 8px 4px 0;
+}
+
+.countStepper {
+  display: flex;
+  align-items: center;
+  background: var(--surface-soft);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.stepButton {
+  min-width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 7px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  background-color: var(--surface-bg) !important;
+  color: var(--app-text) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+}
+
+.counter {
+  min-width: 28px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--app-text);
+}
+
+.factionPanel {
+  margin: 12px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--surface-bg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.factionPanel summary {
+  padding: 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--app-text);
+  list-style: none;
+}
+
+.factionPanel summary::-webkit-details-marker {
+  display: none;
+}
+
+.factionPanelBody {
+  padding: 12px;
+  border-top: 1px solid var(--border-color);
+  background: var(--surface-soft);
+}
+
+.factionHint {
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--muted-text);
+}
+
+.factionCreateRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.inlineInput {
+  flex: 1;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-bg);
+  font-size: 0.85rem;
+  color: var(--app-text);
+}
+
+.factionChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.factionChip {
+  padding: 4px 12px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid var(--accent-soft-border);
+}
+
+.newRoleRow {
+  margin-top: 16px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+}
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .modeButton {
+    font-size: 0.65rem !important;
+    padding: 2px 6px !important;
+  }
+  
+  .roleName {
+    font-size: 0.85rem;
+  }
 }

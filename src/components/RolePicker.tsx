@@ -107,6 +107,26 @@ const resolveRoleMode = (
   return roleScheduleToMode(schedule)
 }
 
+type RoleCategory = "Dorf" | "Werwölfe" | "Spezial" | "Eigene"
+
+const getRoleCategory = (roleID: string, roleName: string, wakeRule: RoleNightWakeRule): RoleCategory => {
+  if (!(roleID in defaultRoles)) {
+    return "Eigene"
+  }
+  
+  const factionID = wakeRule.factionID || ""
+  if (factionID === "wolfpack" || roleName.toLowerCase().includes("wolf") || roleName.toLowerCase().includes("werwolf")) {
+    return "Werwölfe"
+  }
+  
+  const specialRoles = ["seherin", "hexe", "armor", "heiler", "vampir", "drache", "lehrling", "traumwolf"]
+  if (specialRoles.includes(roleID.toLowerCase()) || (wakeRule.schedule && wakeRule.schedule !== "from_night_one")) {
+    return "Spezial"
+  }
+  
+  return "Dorf"
+}
+
 function RolePicker({
   availableRoles,
   availableFactions,
@@ -125,13 +145,39 @@ function RolePicker({
 }: RolePickerProps) {
   const [newFactionName, setNewFactionName] = React.useState("")
   const [newRoleName, setNewRoleName] = React.useState("")
+  const [searchTerm, setSearchTerm] = React.useState("")
 
   const sortedFactions = React.useMemo<[string, string][]>(() => (
     Object.entries(availableFactions).sort((a, b) => a[1].localeCompare(b[1], "de"))
   ), [availableFactions])
-  const sortedRoleIDs = React.useMemo<string[]>(() => (
-    Object.keys(availableRoles).sort((roleA, roleB) => availableRoles[roleA].localeCompare(availableRoles[roleB], "de"))
-  ), [availableRoles])
+
+  const categorizedRoles = React.useMemo(() => {
+    const search = searchTerm.toLowerCase().trim()
+    const groups: Record<RoleCategory, string[]> = {
+      "Dorf": [],
+      "Werwölfe": [],
+      "Spezial": [],
+      "Eigene": []
+    }
+
+    Object.keys(availableRoles).forEach(roleID => {
+      const name = availableRoles[roleID]
+      if (search && !name.toLowerCase().includes(search)) {
+        return
+      }
+
+      const wakeRule = roleNightWakeRules[roleID] || {}
+      const category = getRoleCategory(roleID, name, wakeRule)
+      groups[category].push(roleID)
+    })
+
+    // Sort roles within categories
+    Object.keys(groups).forEach(cat => {
+      groups[cat as RoleCategory].sort((a, b) => availableRoles[a].localeCompare(availableRoles[b], "de"))
+    })
+
+    return groups
+  }, [availableRoles, roleNightWakeRules, searchTerm])
 
   const addNewFaction = () => {
     const factionName = newFactionName.trim()
@@ -142,7 +188,7 @@ function RolePicker({
     setNewFactionName("")
   }
 
-  const availableRolesItems = (roleKey: string) => {
+  const renderRoleItem = (roleKey: string) => {
     const roleTiming = roleTimings[roleKey] || "day"
     const wakeRule = roleNightWakeRules[roleKey] || {}
     const currentMode = resolveRoleMode(roleTiming, wakeRule)
@@ -173,7 +219,7 @@ function RolePicker({
           <div className={styles.roleTitleRow}>
             <span className={styles.roleName}>{availableRoles[roleKey]}</span>
             {!(roleKey in defaultRoles) && (
-              <Button className={styles.deleteRoleButton} onClick={() => deleteCustomRole(roleKey)}>
+              <Button modifier="quiet" className={styles.deleteRoleButton} onClick={() => deleteCustomRole(roleKey)}>
                 <Icon icon='trash' />
               </Button>
             )}
@@ -191,16 +237,16 @@ function RolePicker({
 
           {isNightRole ? (
             <details className={styles.roleOptions}>
-              <summary>Böse Fraktion & Zusatz</summary>
+              <summary>Optionen</summary>
               <div className={styles.roleOptionsBody}>
-                <label className={styles.optionLabel} htmlFor={`faction_${roleKey}`}>Böse Fraktion</label>
+                <label className={styles.optionLabel} htmlFor={`faction_${roleKey}`}>Fraktion</label>
                 <select
                   id={`faction_${roleKey}`}
                   className={styles.optionSelect}
                   value={roleFactionID}
                   onChange={event => setRoleFaction({ roleID: roleKey, factionID: event.currentTarget.value })}
                 >
-                  <option value="">Dorf / Solofraktion</option>
+                  <option value="">Dorf / Solo</option>
                   {factionOptions.map(([factionID, factionName]) => (
                     <option key={`${roleKey}_${factionID}`} value={factionID}>{factionName}</option>
                   ))}
@@ -217,15 +263,13 @@ function RolePicker({
                 )}
               </div>
             </details>
-          ) : (
-            <div className={styles.roleOptionsPlaceholder} aria-hidden="true" />
-          )}
+          ) : null}
         </div>
         <div className={`right ${styles.countColumn}`}>
           <div className={styles.countStepper}>
-            <Button className={styles.stepButton} onClick={() => removeRole(roleKey)} disabled={pickedRoles[roleKey] <= 0}>-</Button>
+            <Button modifier="quiet" className={styles.stepButton} onClick={() => removeRole(roleKey)} disabled={pickedRoles[roleKey] <= 0}>-</Button>
             <span className={styles.counter}>{pickedRoles[roleKey]}</span>
-            <Button className={styles.stepButton} onClick={() => addRole(roleKey)}>+</Button>
+            <Button modifier="quiet" className={styles.stepButton} onClick={() => addRole(roleKey)}>+</Button>
           </div>
         </div>
       </ListItem>
@@ -241,39 +285,33 @@ function RolePicker({
     setNewRoleName("")
   }
 
-  const footer = (
-    <ListItem key={"new_role"}>
-      <div className="center">
-        <Input
-          inputId={"new_role"}
-          modifier='material'
-          placeholder='Neue Rolle'
-          value={newRoleName}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNewRoleName(event.currentTarget.value)}
-          float
-        />
-      </div>
-      <div className="right">
-        <Button onClick={addCustomRole}>+</Button>
-      </div>
-    </ListItem>
-  )
+  const categories: RoleCategory[] = ["Dorf", "Werwölfe", "Spezial", "Eigene"]
 
   return (
-    <>
+    <div className={styles.rolePickerContainer}>
+      <div className={styles.searchBarWrapper}>
+        <input
+          type="text"
+          className={styles.searchField}
+          placeholder="Rolle suchen..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
+      </div>
+
       <details className={styles.factionPanel}>
         <summary>Böse Fraktionen verwalten</summary>
         <div className={styles.factionPanelBody}>
-          <p className={styles.factionHint}>Nur für böse Fraktionen als Gegenpart zur Dorffraktion.</p>
+          <p className={styles.factionHint}>Ermöglicht das Gruppieren von Rollen in der Nacht.</p>
           <div className={styles.factionCreateRow}>
             <input
               type="text"
               className={styles.inlineInput}
               value={newFactionName}
               onChange={event => setNewFactionName(event.currentTarget.value)}
-              placeholder="Neue böse Fraktion"
+              placeholder="z.B. Vampire"
             />
-            <Button modifier="quiet" onClick={addNewFaction}>+ Böse Fraktion</Button>
+            <Button onClick={addNewFaction}>Hinzufügen</Button>
           </div>
           <div className={styles.factionChipRow}>
             {sortedFactions.map(([factionID, factionName]) => (
@@ -282,11 +320,40 @@ function RolePicker({
           </div>
         </div>
       </details>
-      <List
-      >
-        {sortedRoleIDs.map(availableRolesItems)}
-        {footer}
+
+      <List>
+        {categories.map(cat => {
+          const roles = categorizedRoles[cat]
+          if (roles.length === 0) return null
+          return (
+            <React.Fragment key={cat}>
+              <div className={styles.categoryTitle}>{cat}</div>
+              {roles.map(renderRoleItem)}
+            </React.Fragment>
+          )
+        })}
+        
+        {Object.values(categorizedRoles).every(roles => roles.length === 0) && (
+          <div className={styles.emptyState}>Keine Rollen gefunden.</div>
+        )}
+
+        <ListItem className={styles.newRoleRow}>
+          <div className="center">
+            <Input
+              inputId={"new_role"}
+              modifier='material'
+              placeholder='Eigene Rolle hinzufügen'
+              value={newRoleName}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => setNewRoleName(event.currentTarget.value)}
+              float
+              style={{width: '100%'}}
+            />
+          </div>
+          <div className="right">
+            <Button onClick={addCustomRole} disabled={!newRoleName.trim()}>+</Button>
+          </div>
+        </ListItem>
       </List>
-    </>
+    </div>
   )
 }
