@@ -1,5 +1,5 @@
 import React from 'react'
-import { Fab, Icon, Page, List, ListItem, ListTitle, AlertDialog, Button, ToolbarButton, Dialog, Checkbox, Input } from 'react-onsenui'
+import { Fab, Icon, Page, List, ListItem, ListTitle, AlertDialog, Button, Dialog, Checkbox, Input } from 'react-onsenui'
 import { connect, ConnectedProps } from 'react-redux'
 
 import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID, advanceNightZero, advanceToDay, advanceToNight } from '../reducers/game'
@@ -24,6 +24,8 @@ const connector = connect(mapStateToProps, mapDispatch)
 const pStyle: React.CSSProperties = {
   textAlign: 'center',
   opacity: 0.6,
+  fontSize: '0.85rem',
+  margin: '8px 0'
 }
 
 type PlayProps = ConnectedProps<typeof connector>
@@ -102,6 +104,23 @@ const wakesOnNight = (schedule: RoleNightSchedule | undefined, nightCount: numbe
   }
 }
 
+// Night order for the narrator assistant
+const NIGHT_ORDER = [
+  "armor",
+  "priest",
+  "seherin",
+  "werwolf",
+  "vampir",
+  "hexe",
+  "heiler",
+  "lehrling",
+  "traumwolf",
+  "wolfsjunges",
+  "zahnarzt",
+  "putzfrau",
+  "bodyguard",
+]
+
 const Play = ({
   players,
   pickedRoles,
@@ -128,6 +147,7 @@ const Play = ({
   const [nameEditPlayerID, setNameEditPlayerID] = React.useState<number | null>(null)
   const [nameInput, setNameInput] = React.useState("")
   const [playerNames, setPlayerNames] = React.useState<{ [playerID: number]: string }>({})
+  const [doneSteps, setDoneSteps] = React.useState<Set<string>>(new Set())
 
   const selectedPlayerData = players[selectedPlayer]
   const sortedEffectIDs = Object.keys(availableEffects).sort((effectA, effectB) => {
@@ -198,11 +218,30 @@ const Play = ({
     }
   }, [phase.mode, phase.nightCount, pickedRoles, roleTimings, roleNightWakeRules])
 
+  const tonightOrder = React.useMemo(() => {
+    if (phase.mode !== "night") return []
+    return NIGHT_ORDER.filter(roleID => wakingRoleIDsTonight.has(roleID))
+  }, [phase.mode, wakingRoleIDsTonight])
+
   const endGameOk = () => {
     setEndAlertIsOpen(false)
     fullReset()
     navTo('prepare')
   }
+
+  const toggleStep = (roleID: string) => {
+    const nextDone = new Set(doneSteps)
+    if (nextDone.has(roleID)) {
+      nextDone.delete(roleID)
+    } else {
+      nextDone.add(roleID)
+    }
+    setDoneSteps(nextDone)
+  }
+
+  React.useEffect(() => {
+    setDoneSteps(new Set())
+  }, [phase.mode, phase.nightCount])
 
   const closeNewEffectForm = () => {
     setNewEffectFormIsOpen(false)
@@ -275,6 +314,76 @@ const Play = ({
     event.currentTarget.reset()
   }
 
+  const renderPlayerCard = (player: Player, playerID: number) => {
+    const isDead = !player.alive
+    const roleWakesTonight = phase.mode === "night" && wakingRoleIDsTonight.has(player.role)
+    const roleHasAdditionalWakeTonight = phase.mode === "night" && additionalActiveRoleIDsTonight.has(player.role)
+    
+    return (
+      <div 
+        key={playerID} 
+        className={`${styles.playerCard} ${isDead ? styles.playerDead : ''} ${roleWakesTonight ? styles.playerWakeTonight : ''}`}
+      >
+        <div className={styles.playerCardContent}>
+          <div className={styles.playerHeader}>
+            <div className={styles.playerInfo}>
+              <span className={styles.playerNumber}>Spieler {playerID + 1}</span>
+              <span className={styles.playerRoleName}>{availableRoles[player.role]}</span>
+              {playerNames[playerID] && (
+                <span className={styles.playerNameLabel}>{playerNames[playerID]}</span>
+              )}
+            </div>
+            <div className={styles.playerActions}>
+              <button 
+                className={`${styles.actionButton} ${isDead ? styles.actionButtonDead : ''}`}
+                onClick={() => togglePlayerAlive(playerID)}
+                title={isDead ? "Wiederbeleben" : "Eliminieren"}
+              >
+                <Icon icon={isDead ? 'medkit' : 'skull-crossbones'} />
+              </button>
+              <button 
+                className={styles.actionButton}
+                onClick={() => { setPlayerDetailsAreOpen(true); setSelectedPlayer(playerID) }}
+                title="Details & Effekte"
+              >
+                <Icon icon="ellipsis-v" />
+              </button>
+            </div>
+          </div>
+          
+          <div className={styles.playerFooter}>
+            {roleWakesTonight && (
+              <span className={`${styles.wakeTonightBadge} ${styles.wakeTonightBadgeActive}`}>wach</span>
+            )}
+            {roleHasAdditionalWakeTonight && (
+              <span className={styles.additionalWakeBadge}>Aktiv</span>
+            )}
+            
+            {phase.mode === "day" && (
+              <button
+                className={styles.playerNameEditButton}
+                onClick={() => openPlayerNameDialog(playerID)}
+                aria-label="Name bearbeiten"
+              >
+                <Icon icon="fa-pen" />
+              </button>
+            )}
+
+            {player.effects.map(effectID => {
+              const effect = availableEffects[effectID]
+              if (!effect) return null
+              return (
+                <span key={effectID} className={`${styles.effectChip} ${effectDurationClass(effect.duration)}`} title={effect.name}>
+                  <Icon icon={effect.icon} />
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Page
       renderToolbar={() => (<Toolbar />)}
@@ -284,17 +393,13 @@ const Play = ({
         </div>
       }
     >
-      <p style={pStyle}>
-        Dein Dorf hat <span id="total_cnt">{countAlivePlayers(players)} von {players.length}</span> Einwohnern
-      </p>
-
       <section className={styles.phasePanel}>
         <div className={styles.phaseHeader}>
           <div className={styles.phaseHeaderLeft}>
             <span className={`${styles.phaseBadge} ${phase.mode === "night" ? styles.phaseNight : styles.phaseDay}`}>
               {phase.mode === "night" ? `Nacht ${phase.nightCount}` : `Tag ${phase.dayCount}`}
             </span>
-            <span className={styles.phaseCounter}>Tag {phase.dayCount} · Nacht {phase.nightCount}</span>
+            <span className={styles.phaseCounter}>Status: {countAlivePlayers(players)} / {players.length} am Leben</span>
           </div>
           <Button
             modifier="quiet"
@@ -315,75 +420,40 @@ const Play = ({
         </div>
 
         {phase.mode === "night" ? (
-          <p className={styles.sectionHint}>Rollen, die in dieser Nacht aufwachen, sind unten visuell markiert.</p>
+          <p className={styles.sectionHint}>Rollen, die in dieser Nacht aufwachen, sind markiert.</p>
         ) : (
-          <p className={styles.sectionHint}>Beim Wechsel zur Nacht werden „Nächster Tag“-Effekte automatisch entfernt.</p>
+          <p className={styles.sectionHint}>Nutze den Tag, um Namen zu vergeben und Effekte zu prüfen.</p>
         )}
-
-        <p className={styles.sectionMuted}>
-          Aktiv: {countActiveEffects(players, availableEffects, "permanent")} permanent · {countActiveEffects(players, availableEffects, "night")} Nacht · {countActiveEffects(players, availableEffects, "next_day")} nächster Tag
-        </p>
       </section>
 
+      {phase.mode === "night" && tonightOrder.length > 0 && (
+        <section className={styles.narratorAssistant}>
+          <div className={styles.narratorTitle}>
+            <Icon icon="fa-list-check" /> Erzähler-Assistent (Nacht-Reihenfolge)
+          </div>
+          <div className={styles.narratorList}>
+            {tonightOrder.map((roleID, index) => (
+              <div 
+                key={roleID} 
+                className={`${styles.narratorItem} ${doneSteps.has(roleID) ? styles.narratorItemDone : ''}`}
+                onClick={() => toggleStep(roleID)}
+              >
+                <div className={styles.narratorStepNumber}>{index + 1}</div>
+                <span>{availableRoles[roleID]} aufwecken</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="scrollable_content">
-        <List>
-          {players.map((player: Player, playerID: number) => {
-            const roleWakesTonight = phase.mode === "night" && wakingRoleIDsTonight.has(player.role)
-            const roleHasAdditionalWakeTonight = phase.mode === "night" && additionalActiveRoleIDsTonight.has(player.role)
-            const wakeBadgeClassName = `${styles.wakeTonightBadge}${roleWakesTonight ? ` ${styles.wakeTonightBadgeActive}` : ""}`
-            return (
-            <ListItem key={playerID} className={`player${!player.alive ? ' isDead' : ''}${roleWakesTonight ? ` ${styles.playerWakeTonight}` : ''}`}>
-              <div className={styles.playerRoleBlock}>
-                <div className={styles.playerRoleLine}>
-                  <span>{playerID + 1}: {availableRoles[player.role]}</span>
-                  <span className={wakeBadgeClassName}>wach</span>
-                  {roleHasAdditionalWakeTonight && (
-                    <span className={styles.additionalWakeBadge}>Aktiv</span>
-                  )}
-                  {phase.mode === "day" && (
-                    <button
-                      className={styles.playerNameEditButton}
-                      onClick={() => openPlayerNameDialog(playerID)}
-                      aria-label={`Name für Spieler ${playerID + 1} bearbeiten`}
-                    >
-                      <Icon icon="fa-pen" />
-                    </button>
-                  )}
-                </div>
-                {playerNames[playerID] && (
-                  <div className={styles.playerNameLabel}>{playerNames[playerID]}</div>
-                )}
-              </div>
-              <div className={styles.playerEffects}>
-                {player.effects.map(effectID => {
-                  const effect = availableEffects[effectID]
-                  if (!effect) {
-                    return null
-                  }
-                  return (
-                    <span key={effectID} className={`${styles.effectChip} ${effectDurationClass(effect.duration)}`} title={`${effect.name} (${effectDurationLabel(effect.duration)})`}>
-                      <Icon icon={effect.icon} />
-                    </span>
-                  )
-                })}
-              </div>
-              <div>
-                <button onClick={() => togglePlayerAlive(playerID)} className=" button button--outline">
-                  <Icon icon={player.alive ? 'skull-crossbones' : 'medkit'} />
-                </button>
-                <ToolbarButton>
-                  <Icon icon="bars" onClick={() => { setPlayerDetailsAreOpen(true); setSelectedPlayer(playerID) }} />
-                </ToolbarButton>
-              </div>
-            </ListItem>
-          )})}
-        </List>
+        {players.map(renderPlayerCard)}
       </div>
 
       <AlertDialog isOpen={endAlertIsOpen} isCancelable={true} onCancel={() => setEndAlertIsOpen(false)}>
-        <div className="alert-dialog-title">Warnung!</div>
+        <div className="alert-dialog-title">Spiel beenden?</div>
         <div className="alert-dialog-content">
-          Soll das aktuelle Spiel wirklich beendet werden?
+          Möchtest du das aktuelle Spiel wirklich abbrechen und zur Vorbereitung zurückkehren?
         </div>
         <div className="alert-dialog-footer flex">
           <Button onClick={endGameOk} className="alert-dialog-button">
@@ -407,12 +477,12 @@ const Play = ({
               return null
             }
             return (
-              <ListItem key={effectID}>
+              <ListItem key={effectID} tappable onClick={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}>
                 <label className="left">
                   <Checkbox
                     inputId={effectID}
                     checked={selectedPlayerData.effects.includes(effectID)}
-                    onChange={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}
+                    onChange={() => {}} // Handled by ListItem onClick
                     modifier="noborder"
                   />
                 </label>
@@ -423,7 +493,7 @@ const Play = ({
                     {effectDurationLabel(effect.duration)}
                   </span>
                 </label>
-                <button className="right button--dialog" onClick={() => deleteEffect(effectID)}>
+                <button className="right button--dialog" onClick={(e) => { e.stopPropagation(); deleteEffect(effectID); }}>
                   <Icon icon="trash" />
                 </button>
               </ListItem>
@@ -441,7 +511,7 @@ const Play = ({
         </ListTitle>
         <form onSubmit={submitNewEffect}>
           <div className="effect-form-wrapper">
-            <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float />
+            <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float style={{width: '100%'}} />
             <div className={styles.durationPicker}>
               {effectDurationOptions.map((option, index) => (
                 <label key={option.duration}>
@@ -461,9 +531,9 @@ const Play = ({
                   <div className="icon-list-element" key={iconID}>
                     <input type="radio" id={iconID} name="newEffectIcon" value={iconID} className="hidden" />
                     <label htmlFor={iconID}>
-                      <Button className="button--outline button--effect" >
+                      <div className="button button--outline button--effect" >
                         <Icon icon={iconID} />
-                      </Button>
+                      </div>
                     </label>
                   </div>
                 )
@@ -486,6 +556,7 @@ const Play = ({
             modifier="material"
             placeholder="Name eingeben"
             float
+            style={{width: '100%'}}
           />
         </div>
         <Button onClick={savePlayerName} className="alert-dialog-button">Speichern</Button>

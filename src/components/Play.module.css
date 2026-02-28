@@ -1,246 +1,319 @@
 .phasePanel {
-    margin: 0 12px 12px 12px;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    background: linear-gradient(180deg, var(--panel-bg-start) 0%, var(--panel-bg-end) 100%);
-    box-shadow: var(--card-shadow);
+  margin: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--surface-bg) 0%, var(--surface-soft) 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .phaseHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .phaseHeaderLeft {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .phaseBadge {
-    border-radius: 999px;
-    padding: 4px 10px;
-    font-size: 0.8rem;
-    font-weight: 700;
-}
-
-.phaseCounter {
-    font-size: 0.74rem;
-    opacity: 0.72;
-}
-
-.phaseNight {
-    background: var(--night-soft-bg);
-    color: var(--night-soft-text);
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .phaseDay {
-    background: var(--warning-soft-bg);
-    color: var(--warning-soft-text);
+  background-color: var(--warning-soft-bg);
+  color: var(--warning-soft-text);
+  border: 1px solid rgba(243, 176, 31, 0.3);
+}
+
+.phaseNight {
+  background-color: var(--night-soft-bg);
+  color: var(--night-soft-text);
+  border: 1px solid rgba(67, 96, 210, 0.3);
+}
+
+.phaseCounter {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted-text);
 }
 
 .sectionHint {
-    margin: 8px 0 6px 0;
-    font-size: 0.85rem;
-    font-weight: 600;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--muted-text);
 }
 
 .sectionMuted {
-    margin: 0;
-    opacity: 0.7;
-    font-size: 0.78rem;
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--muted-text);
+  opacity: 0.8;
 }
 
-.nightCallList {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 8px;
+/* Narrator Assistant Styles */
+.narratorAssistant {
+  margin: 0 12px 16px;
+  background: var(--surface-bg);
+  border-radius: 12px;
+  border: 1px solid var(--accent-soft-border);
+  overflow: hidden;
 }
 
-.nightCallRow {
-    display: grid;
-    grid-template-columns: minmax(120px, 1fr) minmax(120px, auto) auto;
-    gap: 8px;
-    align-items: center;
-    padding: 6px 8px;
-    border-radius: 8px;
-    background: var(--soft-row-bg);
+.narratorTitle {
+  padding: 10px 14px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.nightCallRole {
-    font-weight: 600;
-    font-size: 0.86rem;
+.narratorList {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
 }
 
-.nightCallMeta {
-    font-size: 0.76rem;
-    opacity: 0.72;
+.narratorItem {
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--soft-row-bg);
 }
 
-.nightCallCheck {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.74rem;
-    justify-self: end;
+.narratorItem:last-child {
+  border-bottom: none;
 }
 
-.nightCallCheck input {
-    width: 14px;
-    height: 14px;
-    margin: 0;
+.narratorItemDone {
+  opacity: 0.5;
+  text-decoration: line-through;
 }
 
-.awakeRoleList {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
+.narratorStepNumber {
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
-.awakeRoleChip {
-    border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 0.76rem;
-    background: var(--chip-bg);
+/* Player Card Styles */
+.playerCard {
+  margin: 8px 12px;
+  background: var(--surface-bg);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.playerEffects {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+.playerCard:active {
+  transform: scale(0.98);
+}
+
+.playerDead {
+  background-color: var(--dead-bg);
+  opacity: 0.8;
+}
+
+.playerDead .playerRoleName {
+  text-decoration: line-through;
 }
 
 .playerWakeTonight {
-    box-shadow: inset 3px 0 0 var(--wake-border);
-    background: var(--wake-highlight);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft-bg);
 }
 
-.playerRoleBlock {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.playerCardContent {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.playerRoleLine {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+.playerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
-.wakeTonightBadge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 1px 7px;
-    font-size: 0.68rem;
-    color: transparent;
-    background: transparent;
-    border: 1px solid transparent;
-    user-select: none;
+.playerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
-.wakeTonightBadgeActive {
-    color: var(--accent-soft-text);
-    background: var(--accent-soft-bg);
-    border-color: var(--accent-soft-border);
+.playerNumber {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted-text);
+  text-transform: uppercase;
 }
 
-.additionalWakeBadge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 1px 7px;
-    font-size: 0.68rem;
-    color: var(--warning-soft-text);
-    background: var(--warning-soft-bg);
-    border: 1px solid var(--border-strong);
-    user-select: none;
-}
-
-.playerNameEditButton {
-    border: none;
-    background: transparent;
-    color: var(--accent-soft-text);
-    opacity: 0.78;
-    padding: 0 3px;
-    cursor: pointer;
+.playerRoleName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--app-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .playerNameLabel {
-    font-size: 0.74rem;
-    color: var(--muted-text);
-    opacity: 0.8;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent);
 }
 
-.nameDialogBody {
-    padding: 8px 10px 2px 10px;
+.playerActions {
+  display: flex;
+  gap: 6px;
 }
 
-.effectPickerHint {
-    margin: 4px 0 6px 0;
-    font-size: 0.75rem;
-    opacity: 0.75;
-    color: var(--accent-soft-text);
+.actionButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  background: var(--surface-soft);
+  color: var(--app-text);
+  padding: 0;
+}
+
+.actionButtonActive {
+  background: var(--accent-soft-bg);
+  color: var(--accent);
+  border-color: var(--accent-soft-border);
+}
+
+.actionButtonDead {
+  background: var(--danger-soft-bg, rgba(221, 85, 112, 0.1));
+  color: var(--danger);
+  border-color: rgba(221, 85, 112, 0.3);
+}
+
+.playerFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.wakeTonightBadge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--soft-row-bg);
+  color: var(--muted-text);
+}
+
+.wakeTonightBadgeActive {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.additionalWakeBadge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--success);
+  color: var(--success-contrast);
 }
 
 .effectChip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 999px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 6px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.effectNight { background-color: var(--violet-soft-bg); color: var(--violet-soft-text); }
+.effectNextDay { background-color: var(--warning-soft-bg); color: var(--warning-soft-text); }
+.effectPermanent { background-color: var(--green-soft-bg); color: var(--green-soft-text); }
+
+.playerNameEditButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--muted-text);
+  cursor: pointer;
 }
 
 .effectDurationLabel {
-    margin-left: 8px;
-    border-radius: 999px;
-    padding: 1px 6px;
-    font-size: 0.68rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  text-transform: uppercase;
 }
 
-.effectPermanent {
-    color: var(--pink-soft-text);
-    background: var(--pink-soft-bg);
+.effectPickerHint {
+  padding: 10px 16px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted-text);
+  background: var(--surface-soft);
+  font-style: italic;
 }
 
-.effectNight {
-    color: var(--night-soft-text);
-    background: var(--night-soft-bg);
-}
-
-.effectNextDay {
-    color: var(--warning-soft-text);
-    background: var(--warning-soft-bg);
+.nameDialogBody {
+  padding: 20px;
 }
 
 .durationPicker {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 0.85rem;
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
 
 .durationPicker label {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-@media (max-width: 640px) {
-    .phaseHeader {
-        flex-wrap: wrap;
-    }
-
-    .nightCallRow {
-        grid-template-columns: 1fr;
-        gap: 4px;
-    }
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
