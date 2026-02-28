@@ -1,18 +1,18 @@
 import { ExampleDeckTemplate } from './types'
 
-// Mittelgroße Runde mit klassischem Kern und zwei Startnacht-Rollen.
-// Quellen: https://www.partyspiele.org/werwolf/ und https://www.spielregeln.de/werwolf/
 export const exampleDeck12: ExampleDeckTemplate = {
-    id: "example_12_players_online",
-    name: "Beispieldeck 12 Spieler",
+    id: "deck-12-classic",
+    name: "12 Spieler (Klassisch)",
     pickedRoles: {
         werwolf: 3,
-        dorfbewohner: 3,
         seherin: 1,
         hexe: 1,
+        amor: 1,
         jaeger: 1,
-        heiler: 1,
-        prinz: 1,
-        armor: 1,
+        dorfbewohner: 5
     },
+    customRoles: {},
+    availableFactions: {},
+    roleTimings: {},
+    roleNightWakeRules: {}
 }
