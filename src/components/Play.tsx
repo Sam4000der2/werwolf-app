@@ -21,13 +21,6 @@ const mapStateToProps = (state: RootState) => ({
 const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, createEffect, deleteEffect, advanceNightZero, advanceToDay, advanceToNight }
 const connector = connect(mapStateToProps, mapDispatch)
 
-const pStyle: React.CSSProperties = {
-  textAlign: 'center',
-  opacity: 0.6,
-  fontSize: '0.85rem',
-  margin: '8px 0'
-}
-
 type PlayProps = ConnectedProps<typeof connector>
 
 const effectDurationLabel = (duration: EffectDuration): string => {
@@ -84,12 +77,6 @@ const getAllowedEffectDurations = (mode: GameState["phase"]["mode"], nightCount:
 const roleWakesAtNight = (timing: RoleTiming): boolean => timing === "night"
 
 const countAlivePlayers = (players: Player[]) => players.reduce((c, p) => c + (p.alive ? 1 : 0), 0)
-
-const countActiveEffects = (players: Player[], availableEffects: { [key: string]: Effect }, duration: EffectDuration): number => {
-  return players.reduce((count, player) => (
-    count + player.effects.filter(effectID => availableEffects[effectID]?.duration === duration).length
-  ), 0)
-}
 
 const wakesOnNight = (schedule: RoleNightSchedule | undefined, nightCount: number): boolean => {
   switch (schedule || "from_night_one") {
