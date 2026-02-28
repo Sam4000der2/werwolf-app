@@ -7,7 +7,7 @@ export const defaultEffects: { [key: string]: Effect } = {
     infiziert: { name: "Infiziert (Wolfsvater)", icon: "fa-biohazard", duration: "permanent" },
     stumm: { name: "Stumm (Bärbändiger/Dorfdepp)", icon: "fa-comment-slash", duration: "next_day" },
     buergermeister: { name: "Bürgermeister", icon: "fa-crown", duration: "permanent" },
-    hauptmann: { name: "Hauptmann", icon: "fa-star", duration: "permanent" },
+    verheiratet: { name: "Verheiratet (Priester)", icon: "fa-handshake", duration: "permanent" },
     verflucht: { name: "Verflucht (Urmutter)", icon: "fa-moon", duration: "permanent" },
     geprueft: { name: "Geprüft (Seherin)", icon: "fa-eye", duration: "night" },
     markiert: { name: "Markiert (Rabe)", icon: "fa-feather", duration: "next_day" },
