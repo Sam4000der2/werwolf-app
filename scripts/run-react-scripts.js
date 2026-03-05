@@ -40,4 +40,8 @@ if (runResult.error) {
   process.exit(1);
 }
 
-process.exit(runResult.status || 0);
+if (typeof runResult.status === "number") {
+  process.exit(runResult.status);
+}
+
+process.exit(1);
