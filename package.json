@@ -14,10 +14,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "npx --yes react-scripts@5.0.1 start",
-    "build": "npx --yes react-scripts@5.0.1 build && ln -sfn . build/app",
-    "test": "npx --yes react-scripts@5.0.1 test",
-    "eject": "npx --yes react-scripts@5.0.1 eject",
+    "start": "node scripts/run-react-scripts.js start",
+    "build": "node scripts/run-react-scripts.js build && ln -sfn . build/app",
+    "test": "node scripts/run-react-scripts.js test",
+    "eject": "node scripts/run-react-scripts.js eject",
     "deploy": "rsync -va build/ gobi:/srv/http/werwolf-berlin.de/web/app/ && rsync -va build/.well-known/ gobi:/srv/http/werwolf-berlin.de/web/.well-known/"
   },
   "devDependencies": {
