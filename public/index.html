@@ -1,33 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#eef2fb" />
+    <meta name="theme-color" content="#0f1524" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'" />
     <meta name="description" content="Werwolf Helfer - Der ultimative Helfer für Spielleiter:innen" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <script>
-      (function () {
-        var storageKey = "uiThemeMode";
-        var storedMode = "system";
-        try {
-          var localMode = window.localStorage.getItem(storageKey);
-          if (localMode === "dark" || localMode === "light" || localMode === "system") {
-            storedMode = localMode;
-          }
-        } catch (error) {
-          storedMode = "system";
-        }
-
-        var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        var useDarkTheme = storedMode === "dark" || (storedMode === "system" && prefersDark);
-        var resolvedTheme = useDarkTheme ? "dark" : "light";
-        document.documentElement.setAttribute("data-theme", resolvedTheme);
-        document.documentElement.style.colorScheme = resolvedTheme;
-      })();
-    </script>
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <script src="%PUBLIC_URL%/theme-init.js"></script>
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
