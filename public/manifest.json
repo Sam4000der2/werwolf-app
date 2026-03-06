@@ -35,7 +35,7 @@
   "description": "Eine App, die Spielleiter:innen hilft, kontaktlos Spiele zu leiten.",
   "id": "de.kaktus42.werwolfhelper",
   "dir": "ltr",
-  "scope": "https://werwolf-berlin.de/",
+  "scope": "/app/",
   "lang": "de",
   "orientation": "portrait",
   "categories": [
