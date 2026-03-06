@@ -15,8 +15,14 @@ class AppErrorBoundary extends React.Component<React.PropsWithChildren, AppError
   }
 
   componentDidCatch(error: unknown): void {
-    // Keep a trace in browser console without crashing the full app shell.
-    console.error("AppErrorBoundary caught runtime error", error);
+    if (process.env.NODE_ENV !== "production") {
+      // Keep full error details during local debugging.
+      console.error("AppErrorBoundary caught runtime error", error);
+      return;
+    }
+
+    // Avoid leaking internal runtime details in production consoles.
+    console.error("AppErrorBoundary caught runtime error");
   }
 
   render() {
