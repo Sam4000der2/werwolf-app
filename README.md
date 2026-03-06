@@ -22,6 +22,50 @@ Ergänzte Funktionen:
 - Theme-Umschaltung in der Toolbar (`system`, `light`, `dark`).
 - Fehlergrenze (`AppErrorBoundary`) für robustere Laufzeitfehler-Behandlung.
 
+## Entwicklung, Build und Deployment
+
+### Voraussetzungen
+
+- Node.js und npm (lokal)
+- Linux/Unix-Shell für den aktuellen Build-Workflow (`ln -sfn` im Build-Script)
+- Für Deployment zusätzlich: `rsync`, SSH-Zugang und Host-Alias `gobi`
+
+### Lokale Entwicklung
+
+```bash
+npm install
+npm start
+```
+
+### Build und Tests
+
+```bash
+npm run build
+npm test
+```
+
+Hinweis: `npm run build` erstellt zusätzlich den Symlink `build/app`, damit die App unter `/app/` ausgeliefert werden kann.
+
+### Runtime-Umgebungsvariable
+
+Die Service-Worker-Registrierung ist standardmäßig deaktiviert und wird über folgende Variable gesteuert:
+
+- `REACT_APP_ENABLE_SW=true`: Service Worker registrieren (Offline/PWA aktiv)
+- jeder andere Wert oder nicht gesetzt: Service Worker wird deaktiviert
+
+Siehe Beispielwerte in `.env.example`.
+
+### Deployment
+
+```bash
+npm run deploy
+```
+
+Das Script ist aktuell auf die Zielumgebung `gobi:/srv/http/werwolf-berlin.de/web/` zugeschnitten und synchronisiert:
+
+- `build/` nach `/srv/http/werwolf-berlin.de/web/app/`
+- `build/.well-known/` nach `/srv/http/werwolf-berlin.de/web/.well-known/`
+
 ### Build Android App
 
 - Install bubblewrap
