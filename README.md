@@ -41,16 +41,19 @@ npm start
 
 ```bash
 npm run build
-npm test
+npm run test
+npm run lint
+npm run typecheck
 ```
 
 Hinweis: `npm run build` erstellt zusätzlich den Symlink `build/app`, damit die App unter `/app/` ausgeliefert werden kann.
 
-### Runtime-Umgebungsvariable
+### Build-time-Umgebungsvariable
 
-Die Service-Worker-Registrierung ist standardmäßig deaktiviert und wird über folgende Variable gesteuert:
+Die Service-Worker-Registrierung wird über `REACT_APP_ENABLE_SW` gesteuert.
+Die Variable wird bei Create-React-App zur Build-Zeit in das Bundle eingebettet.
 
-- `REACT_APP_ENABLE_SW=true`: Service Worker registrieren (Offline/PWA aktiv)
+- `REACT_APP_ENABLE_SW=true npm run build`: Service Worker registrieren (Offline/PWA aktiv)
 - jeder andere Wert oder nicht gesetzt: Service Worker wird deaktiviert
 
 Siehe Beispielwerte in `.env.example`.

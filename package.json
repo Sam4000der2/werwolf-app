@@ -16,7 +16,9 @@
   "scripts": {
     "start": "node scripts/run-react-scripts.js start",
     "build": "node scripts/run-react-scripts.js build && ln -sfn . build/app",
-    "test": "node scripts/run-react-scripts.js test",
+    "test": "node scripts/run-react-scripts.js test --watchAll=false",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit",
     "eject": "node scripts/run-react-scripts.js eject",
     "deploy": "rsync -va build/ gobi:/srv/http/werwolf-berlin.de/web/app/ && rsync -va build/.well-known/ gobi:/srv/http/werwolf-berlin.de/web/.well-known/"
   },
@@ -31,7 +33,7 @@
     "@types/react-dom": "^18.2.21",
     "@types/react-redux": "^7.1.33",
     "react-scripts": "5.0.1",
-    "serve": "^14.2.5",
+    "serve": "^14.2.6",
     "typescript": "^4.9.5",
     "workbox-background-sync": "^6.6.0",
     "workbox-broadcast-update": "^6.6.0",
