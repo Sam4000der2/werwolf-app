@@ -858,10 +858,6 @@ const Play = ({
                 </label>
                 <div
                   className={styles.effectMain}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    toggleSelectedPlayerEffect(effectID)
-                  }}
                   role={isDisabled ? undefined : "button"}
                   tabIndex={isDisabled ? -1 : 0}
                   aria-disabled={isDisabled}
@@ -872,7 +868,6 @@ const Play = ({
                       toggleSelectedPlayerEffect(effectID)
                     }
                   }}
-                  aria-label={`${effect.name} auswählen`}
                 >
                 <div className={styles.effectNameLine}>
                   <span className="icon-text">
