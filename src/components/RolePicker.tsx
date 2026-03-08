@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect, ConnectedProps } from 'react-redux'
-import { List, ListItem, Button, Input, Icon } from 'react-onsenui'
+import { AlertDialog, List, ListItem, Button, Input, Icon } from 'react-onsenui'
 
 import {
   addRole,
@@ -43,7 +43,8 @@ export default connector(RolePicker)
 
 type RolePickerProps = ConnectedProps<typeof connector>
 type RoleActivationMode = "day" | "night_every" | "night_zero" | "night_even" | "night_odd"
-const roleActivationOrder: RoleActivationMode[] = ["day", "night_every", "night_zero", "night_even", "night_odd"]
+type DeleteRoleCandidate = { id: string, name: string }
+const RESERVED_ROLE_IDS = new Set(["__proto__", "prototype", "constructor"])
 
 const modeInfo = (mode: RoleActivationMode): { label: string, icon: string, cssClass: string } => {
   switch (mode) {
@@ -60,11 +61,7 @@ const modeInfo = (mode: RoleActivationMode): { label: string, icon: string, cssC
   }
 }
 
-const getNextMode = (currentMode: RoleActivationMode): RoleActivationMode => {
-  const currentIdx = roleActivationOrder.indexOf(currentMode)
-  const nextIdx = currentIdx >= 0 ? (currentIdx + 1) % roleActivationOrder.length : 0
-  return roleActivationOrder[nextIdx]
-}
+const roleActivationOrder: RoleActivationMode[] = ["day", "night_every", "night_zero", "night_even", "night_odd"]
 
 const roleScheduleToMode = (schedule: RoleNightSchedule | undefined): RoleActivationMode => {
   switch (schedule || "from_night_one") {
@@ -127,6 +124,14 @@ const getRoleCategory = (roleID: string, roleName: string, wakeRule: RoleNightWa
   return "Dorf"
 }
 
+const normalizeDraftRoleID = (value: string): string => {
+  const normalizedID = value.replaceAll(/[^\w]/g, "").toLowerCase()
+  if (normalizedID.length <= 0 || RESERVED_ROLE_IDS.has(normalizedID)) {
+    return ""
+  }
+  return normalizedID
+}
+
 function RolePicker({
   availableRoles,
   availableFactions,
@@ -146,6 +151,14 @@ function RolePicker({
   const [newFactionName, setNewFactionName] = React.useState("")
   const [newRoleName, setNewRoleName] = React.useState("")
   const [searchTerm, setSearchTerm] = React.useState("")
+  const [statusText, setStatusText] = React.useState("")
+  const [statusTone, setStatusTone] = React.useState<"info" | "error">("info")
+  const [deleteRoleCandidate, setDeleteRoleCandidate] = React.useState<DeleteRoleCandidate | null>(null)
+
+  const showStatus = (text: string, tone: "info" | "error" = "info") => {
+    setStatusText(text)
+    setStatusTone(tone)
+  }
 
   const sortedFactions = React.useMemo<[string, string][]>(() => (
     Object.entries(availableFactions).sort((a, b) => a[1].localeCompare(b[1], "de"))
@@ -180,20 +193,29 @@ function RolePicker({
   }, [availableRoles, roleNightWakeRules, searchTerm])
 
   const addNewFaction = () => {
-    const factionName = newFactionName.trim()
-    if (factionName.length <= 0) {
+    const normalizedFactionName = newFactionName.trim().slice(0, 80)
+    if (normalizedFactionName.length <= 0) {
+      showStatus("Bitte einen Fraktionsnamen eingeben.", "error")
       return
     }
-    createFaction(factionName)
+    const factionID = normalizeDraftRoleID(normalizedFactionName)
+    if (factionID.length <= 0) {
+      showStatus("Ungültiger Fraktionsname.", "error")
+      return
+    }
+    if (factionID in availableFactions) {
+      showStatus(`Fraktion "${availableFactions[factionID]}" existiert bereits.`, "error")
+      return
+    }
+    createFaction(normalizedFactionName)
     setNewFactionName("")
+    showStatus(`Fraktion "${normalizedFactionName}" hinzugefügt.`)
   }
 
   const renderRoleItem = (roleKey: string) => {
     const roleTiming = roleTimings[roleKey] || "day"
     const wakeRule = roleNightWakeRules[roleKey] || {}
     const currentMode = resolveRoleMode(roleTiming, wakeRule)
-    const nextMode = getNextMode(currentMode)
-    const currentModeInfo = modeInfo(currentMode)
     const isNightRole = roleTiming === "night"
     const roleFactionID = isNightRole ? (wakeRule.factionID || "") : ""
     const roleHasFaction = roleFactionID.length > 0
@@ -203,7 +225,7 @@ function RolePicker({
       ? sortedFactions
       : [[roleFactionID, roleFactionID], ...sortedFactions]
 
-    const applyMode = () => {
+    const applyMode = (nextMode: RoleActivationMode) => {
       if (nextMode === "day") {
         setRoleTiming({ roleID: roleKey, timing: "day" })
         return
@@ -211,6 +233,7 @@ function RolePicker({
 
       setRoleTiming({ roleID: roleKey, timing: "night" })
       setRoleNightSchedule({ roleID: roleKey, schedule: modeToSchedule(nextMode) })
+      showStatus(`Aktivierungsmodus für "${availableRoles[roleKey]}" aktualisiert.`)
     }
 
     return (
@@ -219,20 +242,36 @@ function RolePicker({
           <div className={styles.roleTitleRow}>
             <span className={styles.roleName}>{availableRoles[roleKey]}</span>
             {!(roleKey in defaultRoles) && (
-              <Button modifier="quiet" className={styles.deleteRoleButton} onClick={() => deleteCustomRole(roleKey)}>
+              <Button
+                modifier="quiet"
+                className={styles.deleteRoleButton}
+                onClick={() => {
+                  setDeleteRoleCandidate({ id: roleKey, name: availableRoles[roleKey] })
+                }}
+                aria-label={`Eigene Rolle ${availableRoles[roleKey]} löschen`}
+              >
                 <Icon icon='trash' />
               </Button>
             )}
           </div>
 
           <div className={styles.modeColumn}>
-            <Button
-              modifier="quiet"
-              className={`${styles.modeButton} ${currentModeInfo.cssClass}`}
-              onClick={applyMode}
+            <label className={styles.modeSelectLabel} htmlFor={`mode_${roleKey}`}>
+              Aktivierung
+            </label>
+            <select
+              id={`mode_${roleKey}`}
+              className={`${styles.modeSelect} ${modeInfo(currentMode).cssClass}`}
+              value={currentMode}
+              onChange={(event) => applyMode(event.currentTarget.value as RoleActivationMode)}
+              aria-label={`Aktivierungsmodus für ${availableRoles[roleKey]}`}
             >
-              <Icon icon={currentModeInfo.icon} /> {currentModeInfo.label}
-            </Button>
+              {roleActivationOrder.map((mode) => (
+                <option key={`${roleKey}_${mode}`} value={mode}>
+                  {modeInfo(mode).label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {isNightRole ? (
@@ -267,9 +306,9 @@ function RolePicker({
         </div>
         <div className={`right ${styles.countColumn}`}>
           <div className={styles.countStepper}>
-            <Button modifier="quiet" className={styles.stepButton} onClick={() => removeRole(roleKey)} disabled={pickedRoles[roleKey] <= 0}>-</Button>
+            <Button modifier="quiet" className={styles.stepButton} onClick={() => removeRole(roleKey)} disabled={pickedRoles[roleKey] <= 0} aria-label={`${availableRoles[roleKey]} Anzahl verringern`}>-</Button>
             <span className={styles.counter}>{pickedRoles[roleKey]}</span>
-            <Button modifier="quiet" className={styles.stepButton} onClick={() => addRole(roleKey)}>+</Button>
+            <Button modifier="quiet" className={styles.stepButton} onClick={() => addRole(roleKey)} aria-label={`${availableRoles[roleKey]} Anzahl erhöhen`}>+</Button>
           </div>
         </div>
       </ListItem>
@@ -277,12 +316,32 @@ function RolePicker({
   }
 
   const addCustomRole = () => {
-    const roleName = newRoleName.trim()
-    if (roleName.length <= 0) {
+    const normalizedRoleName = newRoleName.trim().slice(0, 80)
+    if (normalizedRoleName.length <= 0) {
+      showStatus("Bitte einen Rollennamen eingeben.", "error")
       return
     }
-    createCustomRole(roleName)
+    const roleID = normalizeDraftRoleID(normalizedRoleName)
+    if (roleID.length <= 0) {
+      showStatus("Der Rollenname ergibt keine gültige Rollen-ID.", "error")
+      return
+    }
+    if (roleID in availableRoles) {
+      showStatus(`Rolle "${availableRoles[roleID]}" existiert bereits.`, "error")
+      return
+    }
+    createCustomRole(normalizedRoleName)
     setNewRoleName("")
+    showStatus(`Rolle "${normalizedRoleName}" hinzugefügt.`)
+  }
+
+  const confirmDeleteCustomRole = () => {
+    if (!deleteRoleCandidate) {
+      return
+    }
+    deleteCustomRole(deleteRoleCandidate.id)
+    showStatus(`Rolle "${deleteRoleCandidate.name}" gelöscht.`)
+    setDeleteRoleCandidate(null)
   }
 
   const categories: RoleCategory[] = ["Dorf", "Werwölfe", "Spezial", "Eigene"]
@@ -298,6 +357,11 @@ function RolePicker({
           onChange={e => setSearchTerm(e.target.value)}
         />
       </div>
+      {statusText.length > 0 && (
+        <p className={`${styles.statusText} ${statusTone === "error" ? styles.statusError : styles.statusInfo}`}>
+          {statusText}
+        </p>
+      )}
 
       <details className={styles.factionPanel}>
         <summary>Böse Fraktionen verwalten</summary>
@@ -311,7 +375,7 @@ function RolePicker({
               onChange={event => setNewFactionName(event.currentTarget.value)}
               placeholder="z.B. Vampire"
             />
-            <Button onClick={addNewFaction}>Hinzufügen</Button>
+            <Button onClick={addNewFaction} aria-label="Neue Fraktion hinzufügen">Hinzufügen</Button>
           </div>
           <div className={styles.factionChipRow}>
             {sortedFactions.map(([factionID, factionName]) => (
@@ -354,6 +418,17 @@ function RolePicker({
           </div>
         </ListItem>
       </List>
+
+      <AlertDialog isOpen={deleteRoleCandidate !== null} isCancelable={true} onCancel={() => setDeleteRoleCandidate(null)}>
+        <div className="alert-dialog-title">Eigene Rolle löschen?</div>
+        <div className="alert-dialog-content">
+          {deleteRoleCandidate ? `Rolle "${deleteRoleCandidate.name}" wirklich löschen?` : ""}
+        </div>
+        <div className="alert-dialog-footer flex">
+          <Button onClick={confirmDeleteCustomRole} className="alert-dialog-button">Ja</Button>
+          <Button onClick={() => setDeleteRoleCandidate(null)} className="alert-dialog-button">Nein</Button>
+        </div>
+      </AlertDialog>
     </div>
   )
 }

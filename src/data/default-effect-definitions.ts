@@ -1,8 +1,8 @@
 export const defaultEffects: { [key: string]: Effect } = {
     verliebt: { name: "Verliebt (Amor)", icon: "fa-heart", duration: "permanent" },
-    geschuetzt: { name: "Geschützt (Heiler/Bodyguard)", icon: "fa-shield-halved", duration: "night" },
+    geschuetzt: { name: "Geschützt (Heiler/Bodyguard)", icon: "fa-shield-alt", duration: "night" },
     vergiftet: { name: "Vergiftet (Hexe)", icon: "fa-vials", duration: "permanent" },
-    geheilt: { name: "Geheilt (Hexe)", icon: "fa-heart-pulse", duration: "night" },
+    geheilt: { name: "Geheilt (Hexe)", icon: "fa-heartbeat", duration: "night" },
     verzaubert: { name: "Verzaubert (Flötenspieler)", icon: "fa-music", duration: "permanent" },
     infiziert: { name: "Infiziert (Wolfsvater)", icon: "fa-biohazard", duration: "permanent" },
     stumm: { name: "Stumm (Bärbändiger/Dorfdepp)", icon: "fa-comment-slash", duration: "next_day" },
@@ -15,3 +15,21 @@ export const defaultEffects: { [key: string]: Effect } = {
     kopie: { name: "Kopie (Wildes Kind/Dieb)", icon: "fa-copy", duration: "permanent" },
     faehigkeit_weg: { name: "Fähigkeit verbraucht", icon: "fa-hourglass-end", duration: "permanent" },
 }
+
+export const defaultEffectOrder = [
+    "vergiftet",
+    "geheilt",
+    "geschuetzt",
+    "stumm",
+    "markiert",
+    "geprueft",
+    "verflucht",
+    "infiziert",
+    "verzaubert",
+    "verliebt",
+    "traum",
+    "verheiratet",
+    "kopie",
+    "faehigkeit_weg",
+    "buergermeister",
+]

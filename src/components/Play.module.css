@@ -91,17 +91,67 @@
   padding: 8px 0;
 }
 
-.narratorItem {
+.narratorControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--soft-row-bg);
+  background: var(--surface-soft);
+}
+
+.narratorControlButton {
+  min-width: 72px;
+  min-height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-bg);
+  color: var(--app-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.narratorControlButton:disabled {
+  opacity: 0.45;
+}
+
+.narratorControlButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.narratorProgress {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted-text);
+}
+
+.narratorItemButton {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
   padding: 8px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.9rem;
   border-bottom: 1px solid var(--soft-row-bg);
+  cursor: pointer;
 }
 
-.narratorItem:last-child {
+.narratorItemButton:last-child {
   border-bottom: none;
+}
+
+.narratorItemActive {
+  background: var(--accent-soft-bg);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.narratorItemButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .narratorItemDone {
@@ -201,8 +251,8 @@
 }
 
 .actionButton {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -276,6 +326,8 @@
 .playerNameEditButton {
   background: none;
   border: none;
+  min-width: 36px;
+  min-height: 36px;
   padding: 4px;
   color: var(--muted-text);
   cursor: pointer;
@@ -316,4 +368,14 @@
   gap: 6px;
   font-size: 0.9rem;
   cursor: pointer;
+}
+
+.effectFormError {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(190, 47, 70, 0.12);
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 600;
 }

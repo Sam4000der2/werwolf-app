@@ -19,6 +19,7 @@ const Toolbar = ({ currentPage, themeMode, setThemeMode }: ConnectedProps<typeof
                 className={themeMode === "system" ? styles.themeActive : ""}
                 onClick={() => setThemeMode("system")}
                 title="Systemmodus"
+                aria-label="Systemmodus aktivieren"
             >
                 <Icon icon="fa-adjust" />
             </ToolbarButton>
@@ -26,6 +27,7 @@ const Toolbar = ({ currentPage, themeMode, setThemeMode }: ConnectedProps<typeof
                 className={themeMode === "light" ? styles.themeActive : ""}
                 onClick={() => setThemeMode("light")}
                 title="Tagmodus"
+                aria-label="Tagmodus aktivieren"
             >
                 <Icon icon="fa-sun" />
             </ToolbarButton>
@@ -33,6 +35,7 @@ const Toolbar = ({ currentPage, themeMode, setThemeMode }: ConnectedProps<typeof
                 className={themeMode === "dark" ? styles.themeActive : ""}
                 onClick={() => setThemeMode("dark")}
                 title="Nachtmodus"
+                aria-label="Nachtmodus aktivieren"
             >
                 <Icon icon="fa-moon" />
             </ToolbarButton>

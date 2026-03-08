@@ -1,6 +1,6 @@
 import React from 'react'
 import { flushSync } from 'react-dom'
-import { Button, Fab, Icon, List, ListItem, Page } from 'react-onsenui';
+import { AlertDialog, Button, Fab, Icon, List, ListItem, Page } from 'react-onsenui';
 import { connect, ConnectedProps } from 'react-redux'
 
 import RolePicker from './RolePicker';
@@ -157,7 +157,14 @@ const Preparation = ({
   const deckFileInputRef = React.useRef<HTMLInputElement>(null)
   const [deckName, setDeckName] = React.useState("")
   const [statusText, setStatusText] = React.useState("")
+  const [statusTone, setStatusTone] = React.useState<"info" | "error">("info")
   const [dangerActionsArmed, setDangerActionsArmed] = React.useState(false)
+  const [deleteDeckCandidate, setDeleteDeckCandidate] = React.useState<SavedDeck | null>(null)
+
+  const showStatus = (text: string, tone: "info" | "error" = "info") => {
+    setStatusText(text)
+    setStatusTone(tone)
+  }
 
   const downloadRolesBackup = () => {
     const backup: RolesBackup = {
@@ -180,7 +187,7 @@ const Preparation = ({
       return
     }
     if (backupFile.size > MAX_BACKUP_FILE_SIZE_BYTES) {
-      alert("Backup-Datei ist zu groß.")
+      showStatus("Backup-Datei ist zu groß.", "error")
       input.value = ""
       return
     }
@@ -191,9 +198,9 @@ const Preparation = ({
       const restoredCustomRoles = extractCustomRoles(parsedBackup)
       restoreCustomRoles(restoredCustomRoles)
       setDangerActionsArmed(false)
-      setStatusText("Rollen wurden wiederhergestellt.")
+      showStatus("Rollen wurden wiederhergestellt.")
     } catch {
-      alert("Backup konnte nicht gelesen werden. Bitte eine gültige JSON-Datei auswählen.")
+      showStatus("Backup konnte nicht gelesen werden. Bitte eine gültige JSON-Datei auswählen.", "error")
     }
 
     input.value = ""
@@ -201,11 +208,12 @@ const Preparation = ({
 
   const saveDeck = () => {
     if (roleCount <= 0) {
+      showStatus("Zum Speichern muss mindestens eine Rolle ausgewählt sein.", "error")
       return
     }
     saveCurrentDeck({ name: deckName })
     setDeckName("")
-    setStatusText("Deck gespeichert.")
+    showStatus("Deck gespeichert.")
   }
 
   const exportDecks = () => {
@@ -230,7 +238,7 @@ const Preparation = ({
       return
     }
     if (backupFile.size > MAX_BACKUP_FILE_SIZE_BYTES) {
-      alert("Deck-Backup ist zu groß.")
+      showStatus("Deck-Backup ist zu groß.", "error")
       input.value = ""
       return
     }
@@ -254,10 +262,9 @@ const Preparation = ({
         importSavedDecks(importedDecks)
       }
       setDangerActionsArmed(false)
-
-      setStatusText("Deck-Backup importiert.")
+      showStatus("Deck-Backup importiert.")
     } catch {
-      alert("Deck-Backup konnte nicht gelesen werden. Bitte eine gültige JSON-Datei auswählen.")
+      showStatus("Deck-Backup konnte nicht gelesen werden. Bitte eine gültige JSON-Datei auswählen.", "error")
     }
 
     input.value = ""
@@ -266,7 +273,20 @@ const Preparation = ({
   const overwriteDeck = (deckID: string, deckName: string) => {
     overwriteSavedDeck({ deckID })
     setDangerActionsArmed(false)
-    setStatusText(`Deck "${deckName}" aktualisiert.`)
+    showStatus(`Deck "${deckName}" aktualisiert.`)
+  }
+
+  const removeDeck = (deck: SavedDeck) => {
+    setDeleteDeckCandidate(deck)
+  }
+
+  const confirmDeleteDeck = () => {
+    if (!deleteDeckCandidate) {
+      return
+    }
+    deleteSavedDeck(deleteDeckCandidate.id)
+    showStatus(`Deck "${deleteDeckCandidate.name}" gelöscht.`)
+    setDeleteDeckCandidate(null)
   }
 
   const renderSavedDeck = (deck: SavedDeck) => (
@@ -279,9 +299,11 @@ const Preparation = ({
       </div>
       <div className="right">
         <div className={styles.deckRowActions}>
-          <Button modifier="quiet" onClick={() => { loadSavedDeck(deck.id); setStatusText(`Deck "${deck.name}" geladen.`) }}>Laden</Button>
+          <Button modifier="quiet" onClick={() => { loadSavedDeck(deck.id); showStatus(`Deck "${deck.name}" geladen.`) }}>Laden</Button>
           <Button modifier="quiet" disabled={!dangerActionsArmed} onClick={() => overwriteDeck(deck.id, deck.name)}>Akt.</Button>
-          <Button modifier="quiet" onClick={() => { deleteSavedDeck(deck.id); setStatusText(`Deck "${deck.name}" gelöscht.`) }}><Icon icon='trash' /></Button>
+          <Button modifier="quiet" onClick={() => removeDeck(deck)} aria-label={`Deck ${deck.name} löschen`}>
+            <Icon icon='trash' />
+          </Button>
         </div>
       </div>
     </ListItem>
@@ -291,7 +313,7 @@ const Preparation = ({
     restoreCustomRoles({})
     resetRoles()
     setDangerActionsArmed(false)
-    setStatusText("Angezeigte Rollen zurückgesetzt.")
+    showStatus("Angezeigte Rollen zurückgesetzt.")
   }
 
   const startRoleDeal = () => {
@@ -310,8 +332,12 @@ const Preparation = ({
       renderToolbar={() => (<Toolbar />)}
       renderFixed={() =>
         <div>
-          <Fab position="bottom left" onClick={() => resetRoles()}><Icon icon='fa-undo' /></Fab>
-          <Fab position="bottom right" onClick={startRoleDeal} disabled={roleCount === 0}><Icon icon='fa-play' /></Fab>
+          <Fab position="bottom left" onClick={() => resetRoles()} aria-label="Ausgewählte Rollenanzahl zurücksetzen">
+            <Icon icon='fa-undo' />
+          </Fab>
+          <Fab position="bottom right" onClick={startRoleDeal} disabled={roleCount === 0} aria-label="Rollenausteilung starten">
+            <Icon icon='fa-play' />
+          </Fab>
         </div>
       }
     >
@@ -344,7 +370,11 @@ const Preparation = ({
               />
               <Button onClick={saveDeck} disabled={roleCount === 0}>Speichern</Button>
             </div>
-            {statusText.length > 0 && <p className={styles.statusText}>{statusText}</p>}
+            {statusText.length > 0 && (
+              <p className={`${styles.statusText} ${statusTone === "error" ? styles.statusTextError : styles.statusTextInfo}`}>
+                {statusText}
+              </p>
+            )}
             {savedDecks.length === 0 ? (
               <p className={styles.deckHint}>Noch kein Deck gespeichert.</p>
             ) : (
@@ -383,7 +413,18 @@ const Preparation = ({
         </section>
         <input ref={deckFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={importDecksFromFile} />
         <input ref={roleFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={restoreRolesFromFile} />
+      </div>
+
+      <AlertDialog isOpen={deleteDeckCandidate !== null} isCancelable={true} onCancel={() => setDeleteDeckCandidate(null)}>
+        <div className="alert-dialog-title">Deck löschen?</div>
+        <div className="alert-dialog-content">
+          {deleteDeckCandidate ? `Deck "${deleteDeckCandidate.name}" wirklich löschen?` : ""}
         </div>
+        <div className="alert-dialog-footer flex">
+          <Button onClick={confirmDeleteDeck} className="alert-dialog-button">Ja</Button>
+          <Button onClick={() => setDeleteDeckCandidate(null)} className="alert-dialog-button">Nein</Button>
+        </div>
+      </AlertDialog>
     </Page>
   )
 }

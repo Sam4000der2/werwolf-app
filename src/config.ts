@@ -1,12 +1,18 @@
+import { defaultEffects, defaultEffectOrder } from './data/default-effect-definitions'
+
 export {
     defaultRoles,
     defaultRoleTimings,
     defaultFactionNames,
     defaultNightWakeRules,
 } from './data/default-role-definitions'
-export { defaultEffects } from './data/default-effect-definitions'
 
-export const availableIcons = [
+export { defaultEffects, defaultEffectOrder }
+
+const defaultEffectIcons = Array.from(new Set(Object.values(defaultEffects).map((effect) => effect.icon)))
+
+export const availableIcons = Array.from(new Set([
+    ...defaultEffectIcons,
     "fa-moon",
     "fa-cloud-moon",
     "fa-paw",
@@ -105,4 +111,4 @@ export const availableIcons = [
     "fa-wine-glass",
     "fa-wine-bottle",
     "fa-umbrella"
-]
+]))

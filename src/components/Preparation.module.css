@@ -127,8 +127,22 @@
 
 .statusText {
   margin: 0 0 8px;
-  font-size: 0.8rem;
-  color: var(--accent);
+  font-size: 0.82rem;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 600;
+}
+
+.statusTextInfo {
+  color: var(--accent-soft-text);
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent-soft-border);
+}
+
+.statusTextError {
+  color: var(--danger);
+  background: rgba(190, 47, 70, 0.12);
+  border: 1px solid rgba(190, 47, 70, 0.26);
 }
 
 .deckList {

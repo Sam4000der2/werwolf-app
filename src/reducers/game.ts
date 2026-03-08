@@ -717,7 +717,6 @@ const gameSlice = createSlice({
             }
 
             if (newRoleID in state.availableRoles) {
-                alert(`Role "${newRoleName}" with ID "${newRoleID}" already exists`)
                 return state
             }
 

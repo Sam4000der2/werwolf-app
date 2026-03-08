@@ -5,7 +5,7 @@ import { connect, ConnectedProps } from 'react-redux'
 import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID, advanceNightZero, advanceToDay, advanceToNight } from '../reducers/game'
 import { navTo } from '../reducers/ui'
 import Toolbar from './Toolbar'
-import { availableIcons } from '../config'
+import { availableIcons, defaultEffectOrder } from '../config'
 import styles from './Play.module.css'
 
 const mapStateToProps = (state: RootState) => ({
@@ -22,6 +22,12 @@ const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, c
 const connector = connect(mapStateToProps, mapDispatch)
 
 type PlayProps = ConnectedProps<typeof connector>
+type ConfirmationState = {
+  isOpen: boolean
+  title: string
+  message: string
+  onConfirm: (() => void) | null
+}
 
 const effectDurationLabel = (duration: EffectDuration): string => {
   switch (duration) {
@@ -77,6 +83,7 @@ const getAllowedEffectDurations = (mode: GameState["phase"]["mode"], nightCount:
 const roleWakesAtNight = (timing: RoleTiming): boolean => timing === "night"
 
 const countAlivePlayers = (players: Player[]) => players.reduce((c, p) => c + (p.alive ? 1 : 0), 0)
+const PLAYER_NAME_STORAGE_KEY = "playPlayerNames"
 
 const wakesOnNight = (schedule: RoleNightSchedule | undefined, nightCount: number): boolean => {
   switch (schedule || "from_night_one") {
@@ -91,8 +98,7 @@ const wakesOnNight = (schedule: RoleNightSchedule | undefined, nightCount: numbe
   }
 }
 
-// Night order for the narrator assistant
-const NIGHT_ORDER = [
+const NARRATOR_NIGHT_ORDER_PREFERENCE = [
   "armor",
   "priest",
   "seherin",
@@ -135,15 +141,55 @@ const Play = ({
   const [nameInput, setNameInput] = React.useState("")
   const [playerNames, setPlayerNames] = React.useState<{ [playerID: number]: string }>({})
   const [doneSteps, setDoneSteps] = React.useState<Set<string>>(new Set())
+  const [currentNightStepIndex, setCurrentNightStepIndex] = React.useState(0)
+  const [effectFormError, setEffectFormError] = React.useState("")
+  const [confirmationState, setConfirmationState] = React.useState<ConfirmationState>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  })
 
   const selectedPlayerData = players[selectedPlayer]
-  const sortedEffectIDs = Object.keys(availableEffects).sort((effectA, effectB) => {
-    const durationDiff = durationSortOrder(availableEffects[effectA].duration) - durationSortOrder(availableEffects[effectB].duration)
-    if (durationDiff !== 0) {
-      return durationDiff
-    }
-    return availableEffects[effectA].name.localeCompare(availableEffects[effectB].name, "de")
-  })
+  const defaultEffectPriorityByID = React.useMemo(() => {
+    const mappedPriority: { [effectID: string]: number } = {}
+    defaultEffectOrder.forEach((effectID, index) => {
+      mappedPriority[effectID] = index
+    })
+    return mappedPriority
+  }, [])
+
+  const selectedPlayerEffectIDs = React.useMemo(() => (
+    new Set(selectedPlayerData?.effects || [])
+  ), [selectedPlayerData])
+
+  const sortedEffectIDs = React.useMemo(() => (
+    Object.keys(availableEffects).sort((effectA, effectB) => {
+      const effectAIsActive = selectedPlayerEffectIDs.has(effectA)
+      const effectBIsActive = selectedPlayerEffectIDs.has(effectB)
+      if (effectAIsActive !== effectBIsActive) {
+        return effectAIsActive ? -1 : 1
+      }
+
+      const fallbackPriority = Number.MAX_SAFE_INTEGER
+      const effectAPriority = defaultEffectPriorityByID[effectA] ?? fallbackPriority
+      const effectBPriority = defaultEffectPriorityByID[effectB] ?? fallbackPriority
+      const effectAIsDefault = effectAPriority !== fallbackPriority
+      const effectBIsDefault = effectBPriority !== fallbackPriority
+      if (effectAIsDefault !== effectBIsDefault) {
+        return effectAIsDefault ? -1 : 1
+      }
+      if (effectAPriority !== effectBPriority) {
+        return effectAPriority - effectBPriority
+      }
+
+      const durationDiff = durationSortOrder(availableEffects[effectA].duration) - durationSortOrder(availableEffects[effectB].duration)
+      if (durationDiff !== 0) {
+        return durationDiff
+      }
+      return availableEffects[effectA].name.localeCompare(availableEffects[effectB].name, "de")
+    })
+  ), [availableEffects, selectedPlayerEffectIDs, defaultEffectPriorityByID])
 
   const allowedEffectDurations = React.useMemo(() => (
     new Set<EffectDuration>(getAllowedEffectDurations(phase.mode, phase.nightCount))
@@ -205,15 +251,67 @@ const Play = ({
     }
   }, [phase.mode, phase.nightCount, pickedRoles, roleTimings, roleNightWakeRules])
 
+  const narratorOrderPriorityByID = React.useMemo(() => {
+    const mappedPriority: { [roleID: string]: number } = {}
+    NARRATOR_NIGHT_ORDER_PREFERENCE.forEach((roleID, index) => {
+      mappedPriority[roleID] = index
+    })
+    return mappedPriority
+  }, [])
+
   const tonightOrder = React.useMemo(() => {
     if (phase.mode !== "night") return []
-    return NIGHT_ORDER.filter(roleID => wakingRoleIDsTonight.has(roleID))
-  }, [phase.mode, wakingRoleIDsTonight])
+    return Array.from(wakingRoleIDsTonight).sort((roleA, roleB) => {
+      const fallbackPriority = Number.MAX_SAFE_INTEGER
+      const roleAPriority = narratorOrderPriorityByID[roleA] ?? fallbackPriority
+      const roleBPriority = narratorOrderPriorityByID[roleB] ?? fallbackPriority
+      if (roleAPriority !== roleBPriority) {
+        return roleAPriority - roleBPriority
+      }
+      return (availableRoles[roleA] || roleA).localeCompare(availableRoles[roleB] || roleB, "de")
+    })
+  }, [phase.mode, wakingRoleIDsTonight, narratorOrderPriorityByID, availableRoles])
+
+  const currentNightRoleID = tonightOrder[currentNightStepIndex] || null
 
   const endGameOk = () => {
     setEndAlertIsOpen(false)
+    try {
+      localStorage.removeItem(PLAYER_NAME_STORAGE_KEY)
+    } catch {
+      // ignore storage errors
+    }
+    setPlayerNames({})
+    setDoneSteps(new Set())
+    setCurrentNightStepIndex(0)
     fullReset()
     navTo('prepare')
+  }
+
+  const closeConfirmationDialog = () => {
+    setConfirmationState({
+      isOpen: false,
+      title: "",
+      message: "",
+      onConfirm: null,
+    })
+  }
+
+  const requestConfirmation = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmationState({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+    })
+  }
+
+  const confirmDialogOk = () => {
+    const pendingAction = confirmationState.onConfirm
+    closeConfirmationDialog()
+    if (pendingAction) {
+      pendingAction()
+    }
   }
 
   const toggleStep = (roleID: string) => {
@@ -224,14 +322,84 @@ const Play = ({
       nextDone.add(roleID)
     }
     setDoneSteps(nextDone)
+
+    if (currentNightRoleID === roleID) {
+      setCurrentNightStepIndex((previousIndex) => {
+        if (tonightOrder.length <= 0) {
+          return 0
+        }
+        return Math.min(previousIndex + 1, tonightOrder.length - 1)
+      })
+    }
   }
 
   React.useEffect(() => {
     setDoneSteps(new Set())
+    setCurrentNightStepIndex(0)
   }, [phase.mode, phase.nightCount])
+
+  React.useEffect(() => {
+    if (tonightOrder.length <= 0) {
+      setDoneSteps(new Set())
+      setCurrentNightStepIndex(0)
+      return
+    }
+
+    setDoneSteps((previousDoneSteps) => {
+      const nextDoneSteps = new Set<string>()
+      previousDoneSteps.forEach((roleID) => {
+        if (tonightOrder.includes(roleID)) {
+          nextDoneSteps.add(roleID)
+        }
+      })
+      return nextDoneSteps
+    })
+    setCurrentNightStepIndex((previousIndex) => Math.min(previousIndex, tonightOrder.length - 1))
+  }, [tonightOrder])
+
+  React.useEffect(() => {
+    try {
+      const rawPlayerNames = localStorage.getItem(PLAYER_NAME_STORAGE_KEY)
+      if (!rawPlayerNames) {
+        return
+      }
+      const parsedPlayerNames = JSON.parse(rawPlayerNames)
+      if (!parsedPlayerNames || typeof parsedPlayerNames !== "object" || Array.isArray(parsedPlayerNames)) {
+        return
+      }
+
+      const normalizedNames: { [playerID: number]: string } = {}
+      Object.entries(parsedPlayerNames).forEach(([rawPlayerID, rawPlayerName]) => {
+        const playerID = Number(rawPlayerID)
+        if (!Number.isInteger(playerID) || playerID < 0) {
+          return
+        }
+        if (typeof rawPlayerName !== "string") {
+          return
+        }
+        const normalizedName = rawPlayerName.trim()
+        if (normalizedName.length <= 0) {
+          return
+        }
+        normalizedNames[playerID] = normalizedName
+      })
+      setPlayerNames(normalizedNames)
+    } catch {
+      // ignore malformed persisted names
+    }
+  }, [])
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(PLAYER_NAME_STORAGE_KEY, JSON.stringify(playerNames))
+    } catch {
+      // ignore storage write errors
+    }
+  }, [playerNames])
 
   const closeNewEffectForm = () => {
     setNewEffectFormIsOpen(false)
+    setEffectFormError("")
     setPlayerDetailsAreOpen(true)
   }
 
@@ -285,7 +453,7 @@ const Play = ({
 
     const effectID = generateEffectID(effectName)
     if (effectID in availableEffects) {
-      alert(`Effekt "${effectName}" existiert bereits.`)
+      setEffectFormError(`Effekt "${effectName}" existiert bereits.`)
       return
     }
 
@@ -299,6 +467,40 @@ const Play = ({
     togglePlayerEffect({ playerID: selectedPlayer, effectID })
     closeNewEffectForm()
     event.currentTarget.reset()
+  }
+
+  const jumpNightStep = (direction: "previous" | "next") => {
+    setCurrentNightStepIndex((previousIndex) => {
+      if (tonightOrder.length <= 0) {
+        return 0
+      }
+      if (direction === "previous") {
+        return Math.max(0, previousIndex - 1)
+      }
+      return Math.min(tonightOrder.length - 1, previousIndex + 1)
+    })
+  }
+
+  const advancePhase = () => {
+    if (phase.mode === "night") {
+      const confirmText = phase.nightCount === 0
+        ? "Nacht 0 beenden und zu Nacht 1 wechseln?"
+        : `Nacht ${phase.nightCount} beenden und zum Tag wechseln?`
+      requestConfirmation("Phase wechseln?", confirmText, () => {
+        if (phase.nightCount === 0) {
+          advanceNightZero()
+        } else {
+          advanceToDay()
+        }
+      })
+      return
+    }
+
+    requestConfirmation(
+      "Phase wechseln?",
+      `Tag ${phase.dayCount} beenden und zur nächsten Nacht wechseln?`,
+      () => advanceToNight(),
+    )
   }
 
   const renderPlayerCard = (player: Player, playerID: number) => {
@@ -323,8 +525,19 @@ const Play = ({
             <div className={styles.playerActions}>
               <button 
                 className={`${styles.actionButton} ${isDead ? styles.actionButtonDead : ''}`}
-                onClick={() => togglePlayerAlive(playerID)}
+                onClick={() => {
+                  if (!isDead) {
+                    requestConfirmation(
+                      "Spieler eliminieren?",
+                      `Spieler ${playerID + 1} wirklich eliminieren?`,
+                      () => togglePlayerAlive(playerID),
+                    )
+                    return
+                  }
+                  togglePlayerAlive(playerID)
+                }}
                 title={isDead ? "Wiederbeleben" : "Eliminieren"}
+                aria-label={isDead ? `Spieler ${playerID + 1} wiederbeleben` : `Spieler ${playerID + 1} eliminieren`}
               >
                 <Icon icon={isDead ? 'medkit' : 'skull-crossbones'} />
               </button>
@@ -332,6 +545,7 @@ const Play = ({
                 className={styles.actionButton}
                 onClick={() => { setPlayerDetailsAreOpen(true); setSelectedPlayer(playerID) }}
                 title="Details & Effekte"
+                aria-label={`Details und Effekte für Spieler ${playerID + 1} öffnen`}
               >
                 <Icon icon="ellipsis-v" />
               </button>
@@ -376,7 +590,9 @@ const Play = ({
       renderToolbar={() => (<Toolbar />)}
       renderFixed={() =>
         <div>
-          <Fab position="bottom left" onClick={() => setEndAlertIsOpen(true)}><Icon icon='fa-undo' /></Fab>
+          <Fab position="bottom left" onClick={() => setEndAlertIsOpen(true)} aria-label="Spiel beenden und zur Vorbereitung zurückkehren">
+            <Icon icon='fa-undo' />
+          </Fab>
         </div>
       }
     >
@@ -390,17 +606,7 @@ const Play = ({
           </div>
           <Button
             modifier="quiet"
-            onClick={() => {
-              if (phase.mode === "night") {
-                if (phase.nightCount === 0) {
-                  advanceNightZero()
-                } else {
-                  advanceToDay()
-                }
-                return
-              }
-              advanceToNight()
-            }}
+            onClick={advancePhase}
           >
             {phase.mode === "night" ? "Nacht beenden" : "Tag beenden"}
           </Button>
@@ -418,16 +624,42 @@ const Play = ({
           <div className={styles.narratorTitle}>
             <Icon icon="fa-list-check" /> Erzähler-Assistent (Nacht-Reihenfolge)
           </div>
+          <div className={styles.narratorControls}>
+            <button
+              type="button"
+              className={styles.narratorControlButton}
+              onClick={() => jumpNightStep("previous")}
+              disabled={currentNightStepIndex <= 0}
+              aria-label="Vorheriger Nachtschritt"
+            >
+              Zurück
+            </button>
+            <span className={styles.narratorProgress}>
+              Schritt {tonightOrder.length > 0 ? currentNightStepIndex + 1 : 0} / {tonightOrder.length}
+            </span>
+            <button
+              type="button"
+              className={styles.narratorControlButton}
+              onClick={() => jumpNightStep("next")}
+              disabled={currentNightStepIndex >= tonightOrder.length - 1}
+              aria-label="Nächster Nachtschritt"
+            >
+              Weiter
+            </button>
+          </div>
           <div className={styles.narratorList}>
             {tonightOrder.map((roleID, index) => (
-              <div 
+              <button
+                type="button"
                 key={roleID} 
-                className={`${styles.narratorItem} ${doneSteps.has(roleID) ? styles.narratorItemDone : ''}`}
+                className={`${styles.narratorItemButton} ${doneSteps.has(roleID) ? styles.narratorItemDone : ''} ${currentNightRoleID === roleID ? styles.narratorItemActive : ''}`}
                 onClick={() => toggleStep(roleID)}
+                aria-pressed={doneSteps.has(roleID)}
+                aria-label={`${availableRoles[roleID]} aufwecken ${doneSteps.has(roleID) ? "erledigt" : "offen"}`}
               >
                 <div className={styles.narratorStepNumber}>{index + 1}</div>
                 <span>{availableRoles[roleID]} aufwecken</span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -449,6 +681,15 @@ const Play = ({
           <Button onClick={() => setEndAlertIsOpen(false)} className="alert-dialog-button">
             Nein
           </Button>
+        </div>
+      </AlertDialog>
+
+      <AlertDialog isOpen={confirmationState.isOpen} isCancelable={true} onCancel={closeConfirmationDialog}>
+        <div className="alert-dialog-title">{confirmationState.title || "Bitte bestätigen"}</div>
+        <div className="alert-dialog-content">{confirmationState.message}</div>
+        <div className="alert-dialog-footer flex">
+          <Button onClick={confirmDialogOk} className="alert-dialog-button">Ja</Button>
+          <Button onClick={closeConfirmationDialog} className="alert-dialog-button">Nein</Button>
         </div>
       </AlertDialog>
 
@@ -480,7 +721,18 @@ const Play = ({
                     {effectDurationLabel(effect.duration)}
                   </span>
                 </label>
-                <button className="right button--dialog" onClick={(e) => { e.stopPropagation(); deleteEffect(effectID); }}>
+                <button
+                  className="right button--dialog"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    requestConfirmation(
+                      "Effekt löschen?",
+                      `Effekt "${effect.name}" wirklich löschen?`,
+                      () => deleteEffect(effectID),
+                    )
+                  }}
+                  aria-label={`Effekt ${effect.name} löschen`}
+                >
                   <Icon icon="trash" />
                 </button>
               </ListItem>
@@ -488,7 +740,7 @@ const Play = ({
           })}
         </List>
         <p className={styles.effectPickerHint}>{effectPickerHint}</p>
-        <Button onClick={() => { setPlayerDetailsAreOpen(false); setNewEffectFormIsOpen(true) }} className="alert-dialog-button">Neuer Effekt</Button>
+        <Button onClick={() => { setEffectFormError(""); setPlayerDetailsAreOpen(false); setNewEffectFormIsOpen(true) }} className="alert-dialog-button">Neuer Effekt</Button>
         <Button onClick={() => setPlayerDetailsAreOpen(false)} className="alert-dialog-button">Schließen</Button>
       </Dialog>
 
@@ -526,6 +778,9 @@ const Play = ({
                 )
               }) : "No icons available"}
             </div>
+            {effectFormError.length > 0 && (
+              <p className={styles.effectFormError}>{effectFormError}</p>
+            )}
           </div>
           <button type="submit" className="alert-dialog-button">Speichern</button>
         </form>
