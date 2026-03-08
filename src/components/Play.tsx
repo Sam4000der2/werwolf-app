@@ -6,6 +6,7 @@ import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteE
 import { navTo } from '../reducers/ui'
 import Toolbar from './Toolbar'
 import { availableIcons, defaultEffectOrder } from '../config'
+import { witchRoleID, witchPoisonEffectID, witchHealEffectID } from '../data/game-constants'
 import styles from './Play.module.css'
 
 const mapStateToProps = (state: RootState) => ({
@@ -15,6 +16,8 @@ const mapStateToProps = (state: RootState) => ({
   availableEffects: state.game.availableEffects,
   roleTimings: state.game.roleTimings,
   roleNightWakeRules: state.game.roleNightWakeRules,
+  witchPotions: state.game.witchPotions,
+  featureFlags: state.ui.featureFlags,
   phase: state.game.phase,
 })
 
@@ -121,6 +124,8 @@ const Play = ({
   availableEffects,
   roleTimings,
   roleNightWakeRules,
+  witchPotions,
+  featureFlags,
   phase,
   togglePlayerAlive,
   fullReset,
@@ -151,6 +156,10 @@ const Play = ({
   })
 
   const selectedPlayerData = players[selectedPlayer]
+  const confirmDialogsEnabled = featureFlags.confirmDialogs
+  const narratorAssistantEnabled = featureFlags.narratorAssistant
+  const persistentPlayerNamesEnabled = featureFlags.persistentPlayerNames
+  const prioritizeStatusEffectsEnabled = featureFlags.prioritizeStatusEffects
   const defaultEffectPriorityByID = React.useMemo(() => {
     const mappedPriority: { [effectID: string]: number } = {}
     defaultEffectOrder.forEach((effectID, index) => {
@@ -165,22 +174,24 @@ const Play = ({
 
   const sortedEffectIDs = React.useMemo(() => (
     Object.keys(availableEffects).sort((effectA, effectB) => {
-      const effectAIsActive = selectedPlayerEffectIDs.has(effectA)
-      const effectBIsActive = selectedPlayerEffectIDs.has(effectB)
-      if (effectAIsActive !== effectBIsActive) {
-        return effectAIsActive ? -1 : 1
-      }
+      if (prioritizeStatusEffectsEnabled) {
+        const effectAIsActive = selectedPlayerEffectIDs.has(effectA)
+        const effectBIsActive = selectedPlayerEffectIDs.has(effectB)
+        if (effectAIsActive !== effectBIsActive) {
+          return effectAIsActive ? -1 : 1
+        }
 
-      const fallbackPriority = Number.MAX_SAFE_INTEGER
-      const effectAPriority = defaultEffectPriorityByID[effectA] ?? fallbackPriority
-      const effectBPriority = defaultEffectPriorityByID[effectB] ?? fallbackPriority
-      const effectAIsDefault = effectAPriority !== fallbackPriority
-      const effectBIsDefault = effectBPriority !== fallbackPriority
-      if (effectAIsDefault !== effectBIsDefault) {
-        return effectAIsDefault ? -1 : 1
-      }
-      if (effectAPriority !== effectBPriority) {
-        return effectAPriority - effectBPriority
+        const fallbackPriority = Number.MAX_SAFE_INTEGER
+        const effectAPriority = defaultEffectPriorityByID[effectA] ?? fallbackPriority
+        const effectBPriority = defaultEffectPriorityByID[effectB] ?? fallbackPriority
+        const effectAIsDefault = effectAPriority !== fallbackPriority
+        const effectBIsDefault = effectBPriority !== fallbackPriority
+        if (effectAIsDefault !== effectBIsDefault) {
+          return effectAIsDefault ? -1 : 1
+        }
+        if (effectAPriority !== effectBPriority) {
+          return effectAPriority - effectBPriority
+        }
       }
 
       const durationDiff = durationSortOrder(availableEffects[effectA].duration) - durationSortOrder(availableEffects[effectB].duration)
@@ -189,7 +200,7 @@ const Play = ({
       }
       return availableEffects[effectA].name.localeCompare(availableEffects[effectB].name, "de")
     })
-  ), [availableEffects, selectedPlayerEffectIDs, defaultEffectPriorityByID])
+  ), [availableEffects, selectedPlayerEffectIDs, defaultEffectPriorityByID, prioritizeStatusEffectsEnabled])
 
   const allowedEffectDurations = React.useMemo(() => (
     new Set<EffectDuration>(getAllowedEffectDurations(phase.mode, phase.nightCount))
@@ -198,6 +209,19 @@ const Play = ({
   const selectableEffectIDs = React.useMemo(() => (
     sortedEffectIDs.filter(effectID => allowedEffectDurations.has(availableEffects[effectID]?.duration))
   ), [sortedEffectIDs, availableEffects, allowedEffectDurations])
+
+  const hasWitchInGame = React.useMemo(() => (
+    players.some(player => player.role === witchRoleID)
+  ), [players])
+
+  const witchPotionStatusHint = React.useMemo(() => {
+    if (!hasWitchInGame) {
+      return ""
+    }
+    const poisonStatus = witchPotions.poisonUsed ? "verbraucht" : "verfügbar"
+    const healStatus = witchPotions.healUsed ? "verbraucht" : "verfügbar"
+    return `Hexe: Gifttrank ${poisonStatus}, Heiltrank ${healStatus}.`
+  }, [hasWitchInGame, witchPotions.poisonUsed, witchPotions.healUsed])
 
   const effectPickerHint = React.useMemo(() => {
     if (phase.mode === "day") {
@@ -208,6 +232,40 @@ const Play = ({
     }
     return "Ab Nacht 1 sind nur Nacht- und Nächster-Tag-Effekte aktivierbar."
   }, [phase.mode, phase.nightCount])
+
+  const isEffectSelectionDisabled = React.useCallback((effectID: string, isActive: boolean) => {
+    if (isActive) {
+      return false
+    }
+    if (effectID === witchPoisonEffectID) {
+      return witchPotions.poisonUsed
+    }
+    if (effectID === witchHealEffectID) {
+      return witchPotions.healUsed
+    }
+    return false
+  }, [witchPotions.healUsed, witchPotions.poisonUsed])
+
+  const describeEffect = React.useCallback((effectID: string, duration: EffectDuration): string => {
+    if (effectID === witchPoisonEffectID) {
+      return "Hexe: Gifttrank (einmalig). Das Ziel stirbt bei Tagbeginn."
+    }
+    if (effectID === witchHealEffectID) {
+      return "Hexe: Heiltrank (einmalig)."
+    }
+    return `Dauer: ${effectDurationLabel(duration)}`
+  }, [])
+
+  const toggleSelectedPlayerEffect = React.useCallback((effectID: string) => {
+    if (!selectedPlayerData) {
+      return
+    }
+    const isActive = selectedPlayerData.effects.includes(effectID)
+    if (isEffectSelectionDisabled(effectID, isActive)) {
+      return
+    }
+    togglePlayerEffect({ playerID: selectedPlayer, effectID })
+  }, [selectedPlayerData, isEffectSelectionDisabled, togglePlayerEffect, selectedPlayer])
 
   const { wakingRoleIDsTonight, additionalActiveRoleIDsTonight } = React.useMemo(() => {
     const wakingRoleIDs = new Set<string>()
@@ -276,10 +334,12 @@ const Play = ({
 
   const endGameOk = () => {
     setEndAlertIsOpen(false)
-    try {
-      localStorage.removeItem(PLAYER_NAME_STORAGE_KEY)
-    } catch {
-      // ignore storage errors
+    if (persistentPlayerNamesEnabled) {
+      try {
+        localStorage.removeItem(PLAYER_NAME_STORAGE_KEY)
+      } catch {
+        // ignore storage errors
+      }
     }
     setPlayerNames({})
     setDoneSteps(new Set())
@@ -312,6 +372,14 @@ const Play = ({
     if (pendingAction) {
       pendingAction()
     }
+  }
+
+  const runConfirmedAction = (title: string, message: string, onConfirm: () => void) => {
+    if (!confirmDialogsEnabled) {
+      onConfirm()
+      return
+    }
+    requestConfirmation(title, message, onConfirm)
   }
 
   const toggleStep = (roleID: string) => {
@@ -358,6 +426,17 @@ const Play = ({
   }, [tonightOrder])
 
   React.useEffect(() => {
+    if (!confirmDialogsEnabled) {
+      closeConfirmationDialog()
+    }
+  }, [confirmDialogsEnabled])
+
+  React.useEffect(() => {
+    if (!persistentPlayerNamesEnabled) {
+      setPlayerNames({})
+      closePlayerNameDialog()
+      return
+    }
     try {
       const rawPlayerNames = localStorage.getItem(PLAYER_NAME_STORAGE_KEY)
       if (!rawPlayerNames) {
@@ -387,15 +466,18 @@ const Play = ({
     } catch {
       // ignore malformed persisted names
     }
-  }, [])
+  }, [persistentPlayerNamesEnabled])
 
   React.useEffect(() => {
+    if (!persistentPlayerNamesEnabled) {
+      return
+    }
     try {
       localStorage.setItem(PLAYER_NAME_STORAGE_KEY, JSON.stringify(playerNames))
     } catch {
       // ignore storage write errors
     }
-  }, [playerNames])
+  }, [playerNames, persistentPlayerNamesEnabled])
 
   const closeNewEffectForm = () => {
     setNewEffectFormIsOpen(false)
@@ -404,6 +486,9 @@ const Play = ({
   }
 
   const openPlayerNameDialog = (playerID: number) => {
+    if (!persistentPlayerNamesEnabled) {
+      return
+    }
     setNameEditPlayerID(playerID)
     setNameInput(playerNames[playerID] || "")
     setPlayerNameDialogIsOpen(true)
@@ -486,7 +571,7 @@ const Play = ({
       const confirmText = phase.nightCount === 0
         ? "Nacht 0 beenden und zu Nacht 1 wechseln?"
         : `Nacht ${phase.nightCount} beenden und zum Tag wechseln?`
-      requestConfirmation("Phase wechseln?", confirmText, () => {
+      runConfirmedAction("Phase wechseln?", confirmText, () => {
         if (phase.nightCount === 0) {
           advanceNightZero()
         } else {
@@ -496,7 +581,7 @@ const Play = ({
       return
     }
 
-    requestConfirmation(
+    runConfirmedAction(
       "Phase wechseln?",
       `Tag ${phase.dayCount} beenden und zur nächsten Nacht wechseln?`,
       () => advanceToNight(),
@@ -518,7 +603,7 @@ const Play = ({
             <div className={styles.playerInfo}>
               <span className={styles.playerNumber}>Spieler {playerID + 1}</span>
               <span className={styles.playerRoleName}>{availableRoles[player.role]}</span>
-              {playerNames[playerID] && (
+              {persistentPlayerNamesEnabled && playerNames[playerID] && (
                 <span className={styles.playerNameLabel}>{playerNames[playerID]}</span>
               )}
             </div>
@@ -527,7 +612,7 @@ const Play = ({
                 className={`${styles.actionButton} ${isDead ? styles.actionButtonDead : ''}`}
                 onClick={() => {
                   if (!isDead) {
-                    requestConfirmation(
+                    runConfirmedAction(
                       "Spieler eliminieren?",
                       `Spieler ${playerID + 1} wirklich eliminieren?`,
                       () => togglePlayerAlive(playerID),
@@ -560,7 +645,7 @@ const Play = ({
               <span className={styles.additionalWakeBadge}>Aktiv</span>
             )}
             
-            {phase.mode === "day" && (
+            {phase.mode === "day" && persistentPlayerNamesEnabled && (
               <button
                 className={styles.playerNameEditButton}
                 onClick={() => openPlayerNameDialog(playerID)}
@@ -615,11 +700,16 @@ const Play = ({
         {phase.mode === "night" ? (
           <p className={styles.sectionHint}>Rollen, die in dieser Nacht aufwachen, sind markiert.</p>
         ) : (
-          <p className={styles.sectionHint}>Nutze den Tag, um Namen zu vergeben und Effekte zu prüfen.</p>
+          <p className={styles.sectionHint}>
+            {persistentPlayerNamesEnabled
+              ? "Nutze den Tag, um Namen zu vergeben und Effekte zu prüfen."
+              : "Nutze den Tag, um Effekte zu prüfen."
+            }
+          </p>
         )}
       </section>
 
-      {phase.mode === "night" && tonightOrder.length > 0 && (
+      {phase.mode === "night" && narratorAssistantEnabled && tonightOrder.length > 0 && (
         <section className={styles.narratorAssistant}>
           <div className={styles.narratorTitle}>
             <Icon icon="fa-list-check" /> Erzähler-Assistent (Nacht-Reihenfolge)
@@ -684,19 +774,21 @@ const Play = ({
         </div>
       </AlertDialog>
 
-      <AlertDialog isOpen={confirmationState.isOpen} isCancelable={true} onCancel={closeConfirmationDialog}>
-        <div className="alert-dialog-title">{confirmationState.title || "Bitte bestätigen"}</div>
-        <div className="alert-dialog-content">{confirmationState.message}</div>
-        <div className="alert-dialog-footer flex">
-          <Button onClick={confirmDialogOk} className="alert-dialog-button">Ja</Button>
-          <Button onClick={closeConfirmationDialog} className="alert-dialog-button">Nein</Button>
-        </div>
-      </AlertDialog>
+      {confirmDialogsEnabled && (
+        <AlertDialog isOpen={confirmationState.isOpen} isCancelable={true} onCancel={closeConfirmationDialog}>
+          <div className="alert-dialog-title">{confirmationState.title || "Bitte bestätigen"}</div>
+          <div className="alert-dialog-content">{confirmationState.message}</div>
+          <div className="alert-dialog-footer flex">
+            <Button onClick={confirmDialogOk} className="alert-dialog-button">Ja</Button>
+            <Button onClick={closeConfirmationDialog} className="alert-dialog-button">Nein</Button>
+          </div>
+        </AlertDialog>
+      )}
 
       <Dialog isOpen={playerDetailsAreOpen && !!selectedPlayerData} isCancelable={true} onCancel={() => setPlayerDetailsAreOpen(false)}>
         <ListTitle>
           {selectedPlayer + 1}: {selectedPlayerData ? availableRoles[selectedPlayerData.role] : ""}
-          {playerNames[selectedPlayer] ? ` · ${playerNames[selectedPlayer]}` : ""}
+          {persistentPlayerNamesEnabled && playerNames[selectedPlayer] ? ` · ${playerNames[selectedPlayer]}` : ""}
         </ListTitle>
         <List className="effect-list">
           {selectableEffectIDs.map((effectID: string) => {
@@ -704,28 +796,60 @@ const Play = ({
             if (!effect || !selectedPlayerData) {
               return null
             }
+            const isActive = selectedPlayerData.effects.includes(effectID)
+            const isDisabled = isEffectSelectionDisabled(effectID, isActive)
+            const effectDescription = describeEffect(effectID, effect.duration)
             return (
-              <ListItem key={effectID} tappable onClick={() => togglePlayerEffect({ playerID: selectedPlayer, effectID })}>
+              <ListItem
+                key={effectID}
+                tappable={!isDisabled}
+                className={isDisabled ? styles.effectItemDisabled : ""}
+                onClick={() => toggleSelectedPlayerEffect(effectID)}
+              >
                 <label className="left">
                   <Checkbox
                     inputId={effectID}
-                    checked={selectedPlayerData.effects.includes(effectID)}
-                    onChange={() => {}} // Handled by ListItem onClick
+                    checked={isActive}
+                    onClick={(event: React.MouseEvent) => event.stopPropagation()}
+                    onChange={() => toggleSelectedPlayerEffect(effectID)}
                     modifier="noborder"
+                    disabled={isDisabled}
                   />
                 </label>
-                <label htmlFor={effectID} className="icon-text">
-                  <Icon icon={effect.icon} />
-                  {effect.name}
-                  <span className={`${styles.effectDurationLabel} ${effectDurationClass(effect.duration)}`}>
-                    {effectDurationLabel(effect.duration)}
-                  </span>
-                </label>
+                <div
+                  className={styles.effectMain}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    toggleSelectedPlayerEffect(effectID)
+                  }}
+                  role={isDisabled ? undefined : "button"}
+                  tabIndex={isDisabled ? -1 : 0}
+                  aria-disabled={isDisabled}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      toggleSelectedPlayerEffect(effectID)
+                    }
+                  }}
+                  aria-label={`${effect.name} auswählen`}
+                >
+                  <div className={styles.effectNameLine}>
+                    <span className="icon-text">
+                      <Icon icon={effect.icon} />
+                      {effect.name}
+                    </span>
+                    <span className={`${styles.effectDurationLabel} ${effectDurationClass(effect.duration)}`}>
+                      {effectDurationLabel(effect.duration)}
+                    </span>
+                  </div>
+                  <p className={styles.effectDescription}>{effectDescription}</p>
+                </div>
                 <button
                   className="right button--dialog"
                   onClick={(e) => {
                     e.stopPropagation()
-                    requestConfirmation(
+                    runConfirmedAction(
                       "Effekt löschen?",
                       `Effekt "${effect.name}" wirklich löschen?`,
                       () => deleteEffect(effectID),
@@ -740,6 +864,9 @@ const Play = ({
           })}
         </List>
         <p className={styles.effectPickerHint}>{effectPickerHint}</p>
+        {witchPotionStatusHint.length > 0 && (
+          <p className={styles.witchPotionHint}>{witchPotionStatusHint}</p>
+        )}
         <Button onClick={() => { setEffectFormError(""); setPlayerDetailsAreOpen(false); setNewEffectFormIsOpen(true) }} className="alert-dialog-button">Neuer Effekt</Button>
         <Button onClick={() => setPlayerDetailsAreOpen(false)} className="alert-dialog-button">Schließen</Button>
       </Dialog>

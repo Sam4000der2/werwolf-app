@@ -2,6 +2,7 @@ import { createSlice, CaseReducer, PayloadAction } from '@reduxjs/toolkit'
 
 import { defaultRoles, defaultRoleTimings, defaultEffects, defaultFactionNames, defaultNightWakeRules } from '../config'
 import { defaultExampleDeckTemplates } from '../data/example-decks'
+import { witchRoleID, witchPoisonEffectID, witchHealEffectID, abilitySpentEffectID } from '../data/game-constants'
 
 const CUSTOM_ROLES_STORAGE_KEY = "customRoles"
 const SAVED_DECKS_STORAGE_KEY = "savedDecks"
@@ -424,6 +425,36 @@ const removeEffectsByDuration = (
     }))
 }
 
+const applyPoisonDeaths = (players: Player[]): Player[] => (
+    players.map(player => (
+        player.effects.includes(witchPoisonEffectID)
+            ? { ...player, alive: false }
+            : player
+    ))
+)
+
+const toggleEffectOnRolePlayers = (
+    players: Player[],
+    roleID: string,
+    effectID: string,
+    enabled: boolean,
+): Player[] => (
+    players.map(player => {
+        if (normalizeRoleID(player.role) !== roleID) {
+            return player
+        }
+
+        const hasEffect = player.effects.includes(effectID)
+        if (enabled && !hasEffect) {
+            return { ...player, effects: [...player.effects, effectID] }
+        }
+        if (!enabled && hasEffect) {
+            return { ...player, effects: player.effects.filter(effect => effect !== effectID) }
+        }
+        return player
+    })
+)
+
 const persistCustomRoles = (customRoles: GameState["customRoles"]) => {
     safeLocalStorageSetItem(CUSTOM_ROLES_STORAGE_KEY, JSON.stringify(customRoles))
 }
@@ -483,7 +514,20 @@ const loadSavedEffects = (): GameState["availableEffects"] => {
         return { ...defaultEffects }
     }
     const savedEffects = normalizeEffects(parseJSON(rawEffectLibrary, {}))
-    return { ...defaultEffects, ...savedEffects }
+    const mergedEffects = { ...defaultEffects, ...savedEffects }
+    if (mergedEffects[witchPoisonEffectID]) {
+        mergedEffects[witchPoisonEffectID] = {
+            ...mergedEffects[witchPoisonEffectID],
+            duration: defaultEffects[witchPoisonEffectID]?.duration || "night",
+        }
+    }
+    if (mergedEffects[witchHealEffectID]) {
+        mergedEffects[witchHealEffectID] = {
+            ...mergedEffects[witchHealEffectID],
+            duration: defaultEffects[witchHealEffectID]?.duration || "night",
+        }
+    }
+    return mergedEffects
 }
 
 const _resetPickedRoles = (availableRoles: { [key: string]: string }): GameState["pickedRoles"] => {
@@ -532,6 +576,10 @@ const dealRolesR: CaseReducer<GameState> = (state) => {
         players,
         phase: { mode: "night", nightCount: hasNightZeroCall ? 0 : 1, dayCount: 0 },
         deal: initialState.deal,
+        witchPotions: {
+            poisonUsed: false,
+            healUsed: false,
+        },
     }
 }
 
@@ -553,6 +601,10 @@ const initialState: GameState = function () {
         pickedRoles: _resetPickedRoles(initialRoles),
         savedDecks: [...savedDecks],
         availableEffects: { ...savedEffects },
+        witchPotions: {
+            poisonUsed: false,
+            healUsed: false,
+        },
         players: [
             // { role: 'dorfbewohner', alive: false, effects: [] },
             // { role: 'werwolf', alive: true, effects: [] },
@@ -953,7 +1005,8 @@ const gameSlice = createSlice({
                 return state
             }
 
-            const players = removeEffectsByDuration(state.players, state.availableEffects, "night")
+            const playersWithPoisonDeaths = applyPoisonDeaths(state.players)
+            const players = removeEffectsByDuration(playersWithPoisonDeaths, state.availableEffects, "night")
 
             return {
                 ...state,
@@ -1060,7 +1113,34 @@ const gameSlice = createSlice({
 
             const effects = state.players[playerID].effects
             const effectActive = effects.includes(effectID)
+            const isWitchPoison = effectID === witchPoisonEffectID
+            const isWitchHeal = effectID === witchHealEffectID
+            const isWitchPotion = isWitchPoison || isWitchHeal
+            if (!effectActive && isWitchPoison && state.witchPotions.poisonUsed) {
+                return state
+            }
+            if (!effectActive && isWitchHeal && state.witchPotions.healUsed) {
+                return state
+            }
+
             state.players[playerID].effects = effectActive ? [...effects.filter(effect => effect !== effectID)] : [...effects, effectID]
+
+            if (!effectActive && isWitchPotion) {
+                if (isWitchPoison) {
+                    state.witchPotions.poisonUsed = true
+                }
+                if (isWitchHeal) {
+                    state.witchPotions.healUsed = true
+                }
+            }
+
+            if (
+                state.witchPotions.poisonUsed
+                && state.witchPotions.healUsed
+                && abilitySpentEffectID in state.availableEffects
+            ) {
+                state.players = toggleEffectOnRolePlayers(state.players, witchRoleID, abilitySpentEffectID, true)
+            }
             return state
         },
 

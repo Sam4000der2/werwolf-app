@@ -24,6 +24,7 @@ function mapStateToProps(state: RootState) {
     pickedRoles: state.game.pickedRoles,
     roleTimings: state.game.roleTimings,
     roleNightWakeRules: state.game.roleNightWakeRules,
+    featureFlags: state.ui.featureFlags,
   }
 }
 
@@ -138,6 +139,7 @@ function RolePicker({
   pickedRoles,
   roleTimings,
   roleNightWakeRules,
+  featureFlags,
   addRole,
   removeRole,
   createCustomRole,
@@ -154,6 +156,7 @@ function RolePicker({
   const [statusText, setStatusText] = React.useState("")
   const [statusTone, setStatusTone] = React.useState<"info" | "error">("info")
   const [deleteRoleCandidate, setDeleteRoleCandidate] = React.useState<DeleteRoleCandidate | null>(null)
+  const confirmDialogsEnabled = featureFlags.confirmDialogs
 
   const showStatus = (text: string, tone: "info" | "error" = "info") => {
     setStatusText(text)
@@ -246,6 +249,11 @@ function RolePicker({
                 modifier="quiet"
                 className={styles.deleteRoleButton}
                 onClick={() => {
+                  if (!confirmDialogsEnabled) {
+                    deleteCustomRole(roleKey)
+                    showStatus(`Rolle "${availableRoles[roleKey]}" gelöscht.`)
+                    return
+                  }
                   setDeleteRoleCandidate({ id: roleKey, name: availableRoles[roleKey] })
                 }}
                 aria-label={`Eigene Rolle ${availableRoles[roleKey]} löschen`}
@@ -344,6 +352,12 @@ function RolePicker({
     setDeleteRoleCandidate(null)
   }
 
+  React.useEffect(() => {
+    if (!confirmDialogsEnabled) {
+      setDeleteRoleCandidate(null)
+    }
+  }, [confirmDialogsEnabled])
+
   const categories: RoleCategory[] = ["Dorf", "Werwölfe", "Spezial", "Eigene"]
 
   return (
@@ -419,16 +433,18 @@ function RolePicker({
         </ListItem>
       </List>
 
-      <AlertDialog isOpen={deleteRoleCandidate !== null} isCancelable={true} onCancel={() => setDeleteRoleCandidate(null)}>
-        <div className="alert-dialog-title">Eigene Rolle löschen?</div>
-        <div className="alert-dialog-content">
-          {deleteRoleCandidate ? `Rolle "${deleteRoleCandidate.name}" wirklich löschen?` : ""}
-        </div>
-        <div className="alert-dialog-footer flex">
-          <Button onClick={confirmDeleteCustomRole} className="alert-dialog-button">Ja</Button>
-          <Button onClick={() => setDeleteRoleCandidate(null)} className="alert-dialog-button">Nein</Button>
-        </div>
-      </AlertDialog>
+      {confirmDialogsEnabled && (
+        <AlertDialog isOpen={deleteRoleCandidate !== null} isCancelable={true} onCancel={() => setDeleteRoleCandidate(null)}>
+          <div className="alert-dialog-title">Eigene Rolle löschen?</div>
+          <div className="alert-dialog-content">
+            {deleteRoleCandidate ? `Rolle "${deleteRoleCandidate.name}" wirklich löschen?` : ""}
+          </div>
+          <div className="alert-dialog-footer flex">
+            <Button onClick={confirmDeleteCustomRole} className="alert-dialog-button">Ja</Button>
+            <Button onClick={() => setDeleteRoleCandidate(null)} className="alert-dialog-button">Nein</Button>
+          </div>
+        </AlertDialog>
+      )}
     </div>
   )
 }

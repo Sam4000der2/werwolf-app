@@ -9,6 +9,13 @@ export {
 
 export { defaultEffects, defaultEffectOrder }
 
+export const defaultFeatureFlags: AppFeatureFlags = {
+    confirmDialogs: false,
+    narratorAssistant: true,
+    persistentPlayerNames: true,
+    prioritizeStatusEffects: true,
+}
+
 const defaultEffectIcons = Array.from(new Set(Object.values(defaultEffects).map((effect) => effect.icon)))
 
 export const availableIcons = Array.from(new Set([

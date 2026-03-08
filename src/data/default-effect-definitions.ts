@@ -1,7 +1,7 @@
 export const defaultEffects: { [key: string]: Effect } = {
     verliebt: { name: "Verliebt (Amor)", icon: "fa-heart", duration: "permanent" },
     geschuetzt: { name: "Geschützt (Heiler/Bodyguard)", icon: "fa-shield-alt", duration: "night" },
-    vergiftet: { name: "Vergiftet (Hexe)", icon: "fa-vials", duration: "permanent" },
+    vergiftet: { name: "Vergiftet (Hexe)", icon: "fa-vials", duration: "night" },
     geheilt: { name: "Geheilt (Hexe)", icon: "fa-heartbeat", duration: "night" },
     verzaubert: { name: "Verzaubert (Flötenspieler)", icon: "fa-music", duration: "permanent" },
     infiziert: { name: "Infiziert (Wolfsvater)", icon: "fa-biohazard", duration: "permanent" },

@@ -24,6 +24,7 @@ function mapStateToProps(state: RootState) {
     roleCount: totalNumberOfRolesInGame(state.game.pickedRoles),
     customRoles: state.game.customRoles,
     savedDecks: state.game.savedDecks,
+    featureFlags: state.ui.featureFlags,
   }
 }
 
@@ -143,6 +144,7 @@ const Preparation = ({
   roleCount,
   customRoles,
   savedDecks,
+  featureFlags,
   resetRoles,
   dealRoles,
   restoreCustomRoles,
@@ -160,6 +162,7 @@ const Preparation = ({
   const [statusTone, setStatusTone] = React.useState<"info" | "error">("info")
   const [dangerActionsArmed, setDangerActionsArmed] = React.useState(false)
   const [deleteDeckCandidate, setDeleteDeckCandidate] = React.useState<SavedDeck | null>(null)
+  const confirmDialogsEnabled = featureFlags.confirmDialogs
 
   const showStatus = (text: string, tone: "info" | "error" = "info") => {
     setStatusText(text)
@@ -277,8 +280,19 @@ const Preparation = ({
   }
 
   const removeDeck = (deck: SavedDeck) => {
+    if (!confirmDialogsEnabled) {
+      deleteSavedDeck(deck.id)
+      showStatus(`Deck "${deck.name}" gelöscht.`)
+      return
+    }
     setDeleteDeckCandidate(deck)
   }
+
+  React.useEffect(() => {
+    if (!confirmDialogsEnabled) {
+      setDeleteDeckCandidate(null)
+    }
+  }, [confirmDialogsEnabled])
 
   const confirmDeleteDeck = () => {
     if (!deleteDeckCandidate) {
@@ -415,16 +429,18 @@ const Preparation = ({
         <input ref={roleFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={restoreRolesFromFile} />
       </div>
 
-      <AlertDialog isOpen={deleteDeckCandidate !== null} isCancelable={true} onCancel={() => setDeleteDeckCandidate(null)}>
-        <div className="alert-dialog-title">Deck löschen?</div>
-        <div className="alert-dialog-content">
-          {deleteDeckCandidate ? `Deck "${deleteDeckCandidate.name}" wirklich löschen?` : ""}
-        </div>
-        <div className="alert-dialog-footer flex">
-          <Button onClick={confirmDeleteDeck} className="alert-dialog-button">Ja</Button>
-          <Button onClick={() => setDeleteDeckCandidate(null)} className="alert-dialog-button">Nein</Button>
-        </div>
-      </AlertDialog>
+      {confirmDialogsEnabled && (
+        <AlertDialog isOpen={deleteDeckCandidate !== null} isCancelable={true} onCancel={() => setDeleteDeckCandidate(null)}>
+          <div className="alert-dialog-title">Deck löschen?</div>
+          <div className="alert-dialog-content">
+            {deleteDeckCandidate ? `Deck "${deleteDeckCandidate.name}" wirklich löschen?` : ""}
+          </div>
+          <div className="alert-dialog-footer flex">
+            <Button onClick={confirmDeleteDeck} className="alert-dialog-button">Ja</Button>
+            <Button onClick={() => setDeleteDeckCandidate(null)} className="alert-dialog-button">Nein</Button>
+          </div>
+        </AlertDialog>
+      )}
     </Page>
   )
 }

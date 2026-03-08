@@ -9,6 +9,10 @@ declare interface GameState {
     savedDecks: SavedDeck[]
     availableEffects: { [key: string]: Effect }
     players: Player[]
+    witchPotions: {
+        poisonUsed: boolean
+        healUsed: boolean
+    }
     phase: {
         mode: GamePhase
         nightCount: number
@@ -65,9 +69,19 @@ declare interface UIState {
     menuIsOpen: boolean
     currentPage: Page
     themeMode: ThemeMode
+    featureFlags: AppFeatureFlags
 }
 
 declare interface RootState {
     ui: UIState
     game: GameState
 }
+
+declare type AppFeatureFlags = {
+    confirmDialogs: boolean
+    narratorAssistant: boolean
+    persistentPlayerNames: boolean
+    prioritizeStatusEffects: boolean
+}
+
+declare type AppFeatureFlagID = keyof AppFeatureFlags

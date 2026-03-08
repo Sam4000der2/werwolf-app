@@ -31,3 +31,57 @@
     color: var(--toolbar-icon-active) !important;
     opacity: 1 !important;
 }
+
+.settingsDialog {
+    width: min(420px, 92vw);
+    padding: 18px 18px 14px;
+}
+
+.settingsTitle {
+    margin: 0 0 6px;
+    font-size: 1rem;
+}
+
+.settingsHint {
+    margin: 0 0 12px;
+    color: var(--muted-text);
+    font-size: 0.82rem;
+}
+
+.settingsList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settingsRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.settingsText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.settingsName {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.settingsDescription {
+    font-size: 0.78rem;
+    color: var(--muted-text);
+}
+
+.settingsActions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+}

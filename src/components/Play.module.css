@@ -342,6 +342,34 @@
   text-transform: uppercase;
 }
 
+.effectMain {
+  width: 100%;
+  cursor: pointer;
+}
+
+.effectMain:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 8px;
+}
+
+.effectNameLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.effectDescription {
+  margin: 4px 0 0;
+  color: var(--muted-text);
+  font-size: 0.74rem;
+}
+
+.effectItemDisabled {
+  opacity: 0.52;
+}
+
 .effectPickerHint {
   padding: 10px 16px;
   margin: 0;
@@ -349,6 +377,14 @@
   color: var(--muted-text);
   background: var(--surface-soft);
   font-style: italic;
+}
+
+.witchPotionHint {
+  margin: 0;
+  padding: 0 16px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted-text);
 }
 
 .nameDialogBody {

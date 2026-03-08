@@ -21,7 +21,11 @@ Die Bedienung in Vorbereitung und Spielleitung war an einigen Stellen fehleranfa
 
 ## Akzeptanzkriterien
 - Effektliste priorisiert aktive und Default-Effekte.
+- Klick auf Effektname + Effektbeschreibung toggelt den Effekt direkt.
 - Nacht-Assistent ist dynamisch und fuer Tastatur bedienbar.
 - Destruktive Aktionen haben Bestaetigung.
 - Keine `alert()`-Nutzung mehr in UI/Reducer.
 - Touch-Targets sind fuer mobile Bedienung vergroessert.
+- Hexe: `vergiftet` ist kein permanenter Effekt, Gift-/Heiltrank sind jeweils nur 1x nutzbar, danach bekommt die Hexe automatisch `Fähigkeit verbraucht`.
+- Oben in der Toolbar gibt es ein Einstellungs-Icon zur gezielten Aktivierung/Deaktivierung von Funktionen.
+- Zusatzdialoge sind ueber Feature-Flag steuerbar und standardmaessig deaktiviert (Default aus `config.ts`).
