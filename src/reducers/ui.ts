@@ -25,15 +25,23 @@ const normalizeFeatureFlags = (value: unknown): AppFeatureFlags => {
         confirmDialogs: typeof candidateFlags.confirmDialogs === "boolean"
             ? candidateFlags.confirmDialogs
             : defaultFeatureFlags.confirmDialogs,
-        narratorAssistant: typeof candidateFlags.narratorAssistant === "boolean"
-            ? candidateFlags.narratorAssistant
-            : defaultFeatureFlags.narratorAssistant,
-        persistentPlayerNames: typeof candidateFlags.persistentPlayerNames === "boolean"
-            ? candidateFlags.persistentPlayerNames
-            : defaultFeatureFlags.persistentPlayerNames,
-        prioritizeStatusEffects: typeof candidateFlags.prioritizeStatusEffects === "boolean"
-            ? candidateFlags.prioritizeStatusEffects
-            : defaultFeatureFlags.prioritizeStatusEffects,
+        deckBackups: typeof candidateFlags.deckBackups === "boolean"
+            ? candidateFlags.deckBackups
+            : defaultFeatureFlags.deckBackups,
+        defaultStatusEffects: typeof candidateFlags.defaultStatusEffects === "boolean"
+            ? candidateFlags.defaultStatusEffects
+            : defaultFeatureFlags.defaultStatusEffects,
+        advancedNightAssistant: typeof candidateFlags.advancedNightAssistant === "boolean"
+            ? candidateFlags.advancedNightAssistant
+            : (typeof candidateFlags.narratorAssistant === "boolean"
+                ? candidateFlags.narratorAssistant
+                : defaultFeatureFlags.advancedNightAssistant),
+        categorizedRoleSorting: typeof candidateFlags.categorizedRoleSorting === "boolean"
+            ? candidateFlags.categorizedRoleSorting
+            : defaultFeatureFlags.categorizedRoleSorting,
+        darkMode: true,
+        persistentPlayerNames: true,
+        prioritizeStatusEffects: true,
     }
 }
 
@@ -76,6 +84,9 @@ const uiSlice = createSlice({
         },
         setFeatureFlag(state, action: PayloadAction<{ flagID: AppFeatureFlagID, enabled: boolean }>): UIState {
             const { flagID, enabled } = action.payload
+            if (flagID === "darkMode" || flagID === "persistentPlayerNames" || flagID === "prioritizeStatusEffects") {
+                return state
+            }
             if (!(flagID in state.featureFlags)) {
                 return state
             }

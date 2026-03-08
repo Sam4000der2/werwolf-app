@@ -11,7 +11,11 @@ export { defaultEffects, defaultEffectOrder }
 
 export const defaultFeatureFlags: AppFeatureFlags = {
     confirmDialogs: false,
-    narratorAssistant: true,
+    deckBackups: true,
+    defaultStatusEffects: true,
+    advancedNightAssistant: true,
+    categorizedRoleSorting: true,
+    darkMode: true,
     persistentPlayerNames: true,
     prioritizeStatusEffects: true,
 }

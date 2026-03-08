@@ -11,6 +11,11 @@
 - UX 2026-03: Effekt-Dialog klickbar ueber Name + Beschreibung (nicht nur Checkbox)
 - Spielregel 2026-03: `vergiftet` = Hexen-Gifttrank (Nacht-Effekt), Tod bei Tagbeginn
 - Spielregel 2026-03: Hexe hat 1x Gift + 1x Heilung; nach beiden automatisch `faehigkeit_weg`
-- Feature-Flags 2026-03: `confirmDialogs`, `narratorAssistant`, `persistentPlayerNames`, `prioritizeStatusEffects`
+- Feature-Flags 2026-03: `confirmDialogs`, `deckBackups`, `defaultStatusEffects`, `advancedNightAssistant`, `categorizedRoleSorting`
+- Sortierung 2026-03: `prioritizeStatusEffects` ist intern fest auf `true` normalisiert (keine UI-Option)
+- Darkmode + Spielernamen: bleiben bewusst ohne Abschalt-Option in der UI
 - Toolbar 2026-03: Einstellungs-Icon (`fa-cog`) oeffnet Dialog fuer optionale Fork-Funktionen
 - Defaults 2026-03: Feature-Flags zentral in `src/config.ts`, `confirmDialogs` default `false`
+- UX 2026-03: Wenn `advancedNightAssistant` aus, laeuft Play dauerhaft im Tag-Modus (kein Tag/Nacht-Wechsel)
+- UX 2026-03: Ohne Nacht-Assistent sind alle Effekte waehlbar; Dauerinfos im Picker ausgeblendet
+- UX 2026-03: Manuell angelegte Effekte ohne Nacht-Assistent werden intern immer `permanent`

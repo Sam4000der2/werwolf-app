@@ -23,19 +23,24 @@ const Toolbar = ({ currentPage, themeMode, featureFlags, setThemeMode, setFeatur
             description: "Zusätzliche Bestätigungsfenster vor kritischen Aktionen.",
         },
         {
-            id: "narratorAssistant",
-            title: "Erzähler-Assistent",
-            description: "Nacht-Reihenfolge und Schritt-Navigation im Spielmodus.",
+            id: "deckBackups",
+            title: "Decks & Backups",
+            description: "Deckverwaltung und Rollen-/Deck-Import und -Export in der Vorbereitung.",
         },
         {
-            id: "persistentPlayerNames",
-            title: "Spielernamen speichern",
-            description: "Namen lokal speichern und im Spiel anzeigen.",
+            id: "defaultStatusEffects",
+            title: "Default-Statuseffekte",
+            description: "Vordefinierte Statuseffekte in der Effektbibliothek.",
         },
         {
-            id: "prioritizeStatusEffects",
-            title: "Effekte priorisieren",
-            description: "Aktive und Standard-Effekte in der Liste nach oben sortieren.",
+            id: "advancedNightAssistant",
+            title: "Nacht-Assistent & Fraktionen/Nachtschemata",
+            description: "Erzähler-Assistent, Tag/Nacht-Wechsel, Fraktionen und Zusatz-Aufwachen.",
+        },
+        {
+            id: "categorizedRoleSorting",
+            title: "Rollen-Kategorien",
+            description: "Rollen in Dorf/Werwölfe/Spezial/Eigene gruppieren und suchen.",
         },
     ]
 
@@ -43,30 +48,32 @@ const Toolbar = ({ currentPage, themeMode, featureFlags, setThemeMode, setFeatur
         <OnsenToolbar>
             <div className="center">{toolbarText(currentPage)}</div>
             <div className={`right ${styles.themeSwitch}`}>
-                <ToolbarButton
-                    className={themeMode === "system" ? styles.themeActive : ""}
-                    onClick={() => setThemeMode("system")}
-                    title="Systemmodus"
-                    aria-label="Systemmodus aktivieren"
-                >
-                    <Icon icon="fa-adjust" />
-                </ToolbarButton>
-                <ToolbarButton
-                    className={themeMode === "light" ? styles.themeActive : ""}
-                    onClick={() => setThemeMode("light")}
-                    title="Tagmodus"
-                    aria-label="Tagmodus aktivieren"
-                >
-                    <Icon icon="fa-sun" />
-                </ToolbarButton>
-                <ToolbarButton
-                    className={themeMode === "dark" ? styles.themeActive : ""}
-                    onClick={() => setThemeMode("dark")}
-                    title="Nachtmodus"
-                    aria-label="Nachtmodus aktivieren"
-                >
-                    <Icon icon="fa-moon" />
-                </ToolbarButton>
+                <>
+                    <ToolbarButton
+                        className={themeMode === "system" ? styles.themeActive : ""}
+                        onClick={() => setThemeMode("system")}
+                        title="Systemmodus"
+                        aria-label="Systemmodus aktivieren"
+                    >
+                        <Icon icon="fa-adjust" />
+                    </ToolbarButton>
+                    <ToolbarButton
+                        className={themeMode === "light" ? styles.themeActive : ""}
+                        onClick={() => setThemeMode("light")}
+                        title="Tagmodus"
+                        aria-label="Tagmodus aktivieren"
+                    >
+                        <Icon icon="fa-sun" />
+                    </ToolbarButton>
+                    <ToolbarButton
+                        className={themeMode === "dark" ? styles.themeActive : ""}
+                        onClick={() => setThemeMode("dark")}
+                        title="Nachtmodus"
+                        aria-label="Nachtmodus aktivieren"
+                    >
+                        <Icon icon="fa-moon" />
+                    </ToolbarButton>
+                </>
                 <ToolbarButton
                     onClick={() => setSettingsAreOpen(true)}
                     title="Einstellungen"
@@ -92,7 +99,8 @@ const Toolbar = ({ currentPage, themeMode, featureFlags, setThemeMode, setFeatur
                                 <Checkbox
                                     checked={featureFlags[featureFlag.id]}
                                     onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                        setFeatureFlag({ flagID: featureFlag.id, enabled: event.currentTarget.checked })
+                                        const enabled = event.currentTarget.checked
+                                        setFeatureFlag({ flagID: featureFlag.id, enabled })
                                     }}
                                 />
                             </label>

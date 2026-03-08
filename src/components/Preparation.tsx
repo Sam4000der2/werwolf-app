@@ -163,6 +163,8 @@ const Preparation = ({
   const [dangerActionsArmed, setDangerActionsArmed] = React.useState(false)
   const [deleteDeckCandidate, setDeleteDeckCandidate] = React.useState<SavedDeck | null>(null)
   const confirmDialogsEnabled = featureFlags.confirmDialogs
+  const deckBackupsEnabled = featureFlags.deckBackups
+  const advancedNightAssistantEnabled = featureFlags.advancedNightAssistant
 
   const showStatus = (text: string, tone: "info" | "error" = "info") => {
     setStatusText(text)
@@ -361,75 +363,83 @@ const Preparation = ({
           <p className={styles.villageCount}><span id="total_cnt">{roleCount}</span> Einwohner</p>
         </section>
 
-        <details className={styles.deckPanel}>
-          <summary className={styles.deckSummary}>
-            <span>Decks & Backups</span>
-            <span className={styles.deckSummaryMeta}>{savedDecks.length} gespeichert</span>
-          </summary>
-          <div className={styles.deckPanelContent}>
-            <div className={styles.deckPanelHeader}>
-              <h2 className={styles.deckPanelTitle}>Deckverwaltung</h2>
-              <div className={styles.deckHeaderActions}>
-                <Button modifier="quiet" onClick={exportDecks} disabled={savedDecks.length === 0}>Export</Button>
-                <Button modifier="quiet" onClick={requestDeckImport}>Import</Button>
+        {deckBackupsEnabled && (
+          <details className={styles.deckPanel}>
+            <summary className={styles.deckSummary}>
+              <span>Decks & Backups</span>
+              <span className={styles.deckSummaryMeta}>{savedDecks.length} gespeichert</span>
+            </summary>
+            <div className={styles.deckPanelContent}>
+              <div className={styles.deckPanelHeader}>
+                <h2 className={styles.deckPanelTitle}>Deckverwaltung</h2>
+                <div className={styles.deckHeaderActions}>
+                  <Button modifier="quiet" onClick={exportDecks} disabled={savedDecks.length === 0}>Export</Button>
+                  <Button modifier="quiet" onClick={requestDeckImport}>Import</Button>
+                </div>
               </div>
-            </div>
-            <div className={styles.deckSaveRow}>
-              <input
-                type="text"
-                value={deckName}
-                className={styles.deckNameInput}
-                onChange={event => setDeckName(event.currentTarget.value)}
-                placeholder="Deckname (optional)"
-              />
-              <Button onClick={saveDeck} disabled={roleCount === 0}>Speichern</Button>
-            </div>
-            {statusText.length > 0 && (
-              <p className={`${styles.statusText} ${statusTone === "error" ? styles.statusTextError : styles.statusTextInfo}`}>
-                {statusText}
-              </p>
-            )}
-            {savedDecks.length === 0 ? (
-              <p className={styles.deckHint}>Noch kein Deck gespeichert.</p>
-            ) : (
-              <div className={styles.deckList}>
-                <List>
-                  {savedDecks.map(renderSavedDeck)}
-                </List>
-              </div>
-            )}
-            <div className={styles.secondaryBackup}>
-              <span>Rollen-Backup</span>
-              <div className={styles.secondaryBackupActions}>
-                <Button modifier="quiet" onClick={downloadRolesBackup}>Export</Button>
-                <Button modifier="quiet" onClick={requestRoleRestore}>Import</Button>
-              </div>
-            </div>
-            <div className={styles.roleResetControls}>
-              <label className={styles.roleResetToggle}>
+              <div className={styles.deckSaveRow}>
                 <input
-                  type="checkbox"
-                  checked={dangerActionsArmed}
-                  onChange={(event) => setDangerActionsArmed(event.currentTarget.checked)}
+                  type="text"
+                  value={deckName}
+                  className={styles.deckNameInput}
+                  onChange={event => setDeckName(event.currentTarget.value)}
+                  placeholder="Deckname (optional)"
                 />
-                Reset/Überschreiben aktivieren
-              </label>
-              <Button modifier="quiet" disabled={!dangerActionsArmed} onClick={resetDisplayedRoles}>Rollen zurücksetzen</Button>
+                <Button onClick={saveDeck} disabled={roleCount === 0}>Speichern</Button>
+              </div>
+              {statusText.length > 0 && (
+                <p className={`${styles.statusText} ${statusTone === "error" ? styles.statusTextError : styles.statusTextInfo}`}>
+                  {statusText}
+                </p>
+              )}
+              {savedDecks.length === 0 ? (
+                <p className={styles.deckHint}>Noch kein Deck gespeichert.</p>
+              ) : (
+                <div className={styles.deckList}>
+                  <List>
+                    {savedDecks.map(renderSavedDeck)}
+                  </List>
+                </div>
+              )}
+              <div className={styles.secondaryBackup}>
+                <span>Rollen-Backup</span>
+                <div className={styles.secondaryBackupActions}>
+                  <Button modifier="quiet" onClick={downloadRolesBackup}>Export</Button>
+                  <Button modifier="quiet" onClick={requestRoleRestore}>Import</Button>
+                </div>
+              </div>
+              <div className={styles.roleResetControls}>
+                <label className={styles.roleResetToggle}>
+                  <input
+                    type="checkbox"
+                    checked={dangerActionsArmed}
+                    onChange={(event) => setDangerActionsArmed(event.currentTarget.checked)}
+                  />
+                  Reset/Überschreiben aktivieren
+                </label>
+                <Button modifier="quiet" disabled={!dangerActionsArmed} onClick={resetDisplayedRoles}>Rollen zurücksetzen</Button>
+              </div>
             </div>
-          </div>
-        </details>
+          </details>
+        )}
 
-        <p className={styles.roleTimingHint}>
-          Nachtoptionen: Tag Rollen, jede Nacht (∞), einmalig nachts (1x), gerade Nächte (2n), ungerade Nächte (2n+1).
-        </p>
+        {advancedNightAssistantEnabled && (
+          <p className={styles.roleTimingHint}>
+            Nachtoptionen: Tag Rollen, jede Nacht (∞), einmalig nachts (1x), gerade Nächte (2n), ungerade Nächte (2n+1).
+          </p>
+        )}
         <section className={styles.rolePickerSection}>
           <div className="scrollable_content"><RolePicker /></div>
         </section>
-        <input ref={deckFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={importDecksFromFile} />
-        <input ref={roleFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={restoreRolesFromFile} />
+        {deckBackupsEnabled && (
+          <>
+            <input ref={deckFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={importDecksFromFile} />
+            <input ref={roleFileInputRef} type="file" accept=".json,application/json" style={hiddenInputStyle} onChange={restoreRolesFromFile} />
+          </>
+        )}
       </div>
 
-      {confirmDialogsEnabled && (
+      {confirmDialogsEnabled && deckBackupsEnabled && (
         <AlertDialog isOpen={deleteDeckCandidate !== null} isCancelable={true} onCancel={() => setDeleteDeckCandidate(null)}>
           <div className="alert-dialog-title">Deck löschen?</div>
           <div className="alert-dialog-content">

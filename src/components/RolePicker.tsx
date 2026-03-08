@@ -157,6 +157,8 @@ function RolePicker({
   const [statusTone, setStatusTone] = React.useState<"info" | "error">("info")
   const [deleteRoleCandidate, setDeleteRoleCandidate] = React.useState<DeleteRoleCandidate | null>(null)
   const confirmDialogsEnabled = featureFlags.confirmDialogs
+  const categorizedRoleSortingEnabled = featureFlags.categorizedRoleSorting
+  const advancedNightAssistantEnabled = featureFlags.advancedNightAssistant
 
   const showStatus = (text: string, tone: "info" | "error" = "info") => {
     setStatusText(text)
@@ -194,6 +196,10 @@ function RolePicker({
 
     return groups
   }, [availableRoles, roleNightWakeRules, searchTerm])
+
+  const legacyRoleList = React.useMemo(() => (
+    Object.keys(availableRoles)
+  ), [availableRoles])
 
   const addNewFaction = () => {
     const normalizedFactionName = newFactionName.trim().slice(0, 80)
@@ -263,54 +269,58 @@ function RolePicker({
             )}
           </div>
 
-          <div className={styles.modeColumn}>
-            <label className={styles.modeSelectLabel} htmlFor={`mode_${roleKey}`}>
-              Aktivierung
-            </label>
-            <select
-              id={`mode_${roleKey}`}
-              className={`${styles.modeSelect} ${modeInfo(currentMode).cssClass}`}
-              value={currentMode}
-              onChange={(event) => applyMode(event.currentTarget.value as RoleActivationMode)}
-              aria-label={`Aktivierungsmodus für ${availableRoles[roleKey]}`}
-            >
-              {roleActivationOrder.map((mode) => (
-                <option key={`${roleKey}_${mode}`} value={mode}>
-                  {modeInfo(mode).label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {isNightRole ? (
-            <details className={styles.roleOptions}>
-              <summary>Optionen</summary>
-              <div className={styles.roleOptionsBody}>
-                <label className={styles.optionLabel} htmlFor={`faction_${roleKey}`}>Fraktion</label>
+          {advancedNightAssistantEnabled && (
+            <>
+              <div className={styles.modeColumn}>
+                <label className={styles.modeSelectLabel} htmlFor={`mode_${roleKey}`}>
+                  Aktivierung
+                </label>
                 <select
-                  id={`faction_${roleKey}`}
-                  className={styles.optionSelect}
-                  value={roleFactionID}
-                  onChange={event => setRoleFaction({ roleID: roleKey, factionID: event.currentTarget.value })}
+                  id={`mode_${roleKey}`}
+                  className={`${styles.modeSelect} ${modeInfo(currentMode).cssClass}`}
+                  value={currentMode}
+                  onChange={(event) => applyMode(event.currentTarget.value as RoleActivationMode)}
+                  aria-label={`Aktivierungsmodus für ${availableRoles[roleKey]}`}
                 >
-                  <option value="">Dorf / Solo</option>
-                  {factionOptions.map(([factionID, factionName]) => (
-                    <option key={`${roleKey}_${factionID}`} value={factionID}>{factionName}</option>
+                  {roleActivationOrder.map((mode) => (
+                    <option key={`${roleKey}_${mode}`} value={mode}>
+                      {modeInfo(mode).label}
+                    </option>
                   ))}
                 </select>
-                {roleHasFaction && (
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={roleHasAdditionalWake}
-                      onChange={event => setRoleAdditionalWake({ roleID: roleKey, enabled: event.currentTarget.checked })}
-                    />
-                    Zusätzlich als Rolle aufwachen
-                  </label>
-                )}
               </div>
-            </details>
-          ) : null}
+
+              {isNightRole ? (
+                <details className={styles.roleOptions}>
+                  <summary>Optionen</summary>
+                  <div className={styles.roleOptionsBody}>
+                    <label className={styles.optionLabel} htmlFor={`faction_${roleKey}`}>Fraktion</label>
+                    <select
+                      id={`faction_${roleKey}`}
+                      className={styles.optionSelect}
+                      value={roleFactionID}
+                      onChange={event => setRoleFaction({ roleID: roleKey, factionID: event.currentTarget.value })}
+                    >
+                      <option value="">Dorf / Solo</option>
+                      {factionOptions.map(([factionID, factionName]) => (
+                        <option key={`${roleKey}_${factionID}`} value={factionID}>{factionName}</option>
+                      ))}
+                    </select>
+                    {roleHasFaction && (
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={roleHasAdditionalWake}
+                          onChange={event => setRoleAdditionalWake({ roleID: roleKey, enabled: event.currentTarget.checked })}
+                        />
+                        Zusätzlich als Rolle aufwachen
+                      </label>
+                    )}
+                  </div>
+                </details>
+              ) : null}
+            </>
+          )}
         </div>
         <div className={`right ${styles.countColumn}`}>
           <div className={styles.countStepper}>
@@ -362,57 +372,69 @@ function RolePicker({
 
   return (
     <div className={styles.rolePickerContainer}>
-      <div className={styles.searchBarWrapper}>
-        <input
-          type="text"
-          className={styles.searchField}
-          placeholder="Rolle suchen..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
-      </div>
+      {categorizedRoleSortingEnabled && (
+        <div className={styles.searchBarWrapper}>
+          <input
+            type="text"
+            className={styles.searchField}
+            placeholder="Rolle suchen..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+      )}
       {statusText.length > 0 && (
         <p className={`${styles.statusText} ${statusTone === "error" ? styles.statusError : styles.statusInfo}`}>
           {statusText}
         </p>
       )}
 
-      <details className={styles.factionPanel}>
-        <summary>Böse Fraktionen verwalten</summary>
-        <div className={styles.factionPanelBody}>
-          <p className={styles.factionHint}>Ermöglicht das Gruppieren von Rollen in der Nacht.</p>
-          <div className={styles.factionCreateRow}>
-            <input
-              type="text"
-              className={styles.inlineInput}
-              value={newFactionName}
-              onChange={event => setNewFactionName(event.currentTarget.value)}
-              placeholder="z.B. Vampire"
-            />
-            <Button onClick={addNewFaction} aria-label="Neue Fraktion hinzufügen">Hinzufügen</Button>
+      {advancedNightAssistantEnabled && (
+        <details className={styles.factionPanel}>
+          <summary>Böse Fraktionen verwalten</summary>
+          <div className={styles.factionPanelBody}>
+            <p className={styles.factionHint}>Ermöglicht das Gruppieren von Rollen in der Nacht.</p>
+            <div className={styles.factionCreateRow}>
+              <input
+                type="text"
+                className={styles.inlineInput}
+                value={newFactionName}
+                onChange={event => setNewFactionName(event.currentTarget.value)}
+                placeholder="z.B. Vampire"
+              />
+              <Button onClick={addNewFaction} aria-label="Neue Fraktion hinzufügen">Hinzufügen</Button>
+            </div>
+            <div className={styles.factionChipRow}>
+              {sortedFactions.map(([factionID, factionName]) => (
+                <span key={factionID} className={styles.factionChip}>{factionName}</span>
+              ))}
+            </div>
           </div>
-          <div className={styles.factionChipRow}>
-            {sortedFactions.map(([factionID, factionName]) => (
-              <span key={factionID} className={styles.factionChip}>{factionName}</span>
-            ))}
-          </div>
-        </div>
-      </details>
+        </details>
+      )}
 
       <List>
-        {categories.map(cat => {
-          const roles = categorizedRoles[cat]
-          if (roles.length === 0) return null
-          return (
-            <React.Fragment key={cat}>
-              <div className={styles.categoryTitle}>{cat}</div>
-              {roles.map(renderRoleItem)}
-            </React.Fragment>
-          )
-        })}
-        
-        {Object.values(categorizedRoles).every(roles => roles.length === 0) && (
-          <div className={styles.emptyState}>Keine Rollen gefunden.</div>
+        {categorizedRoleSortingEnabled ? (
+          <>
+            {categories.map(cat => {
+              const roles = categorizedRoles[cat]
+              if (roles.length === 0) return null
+              return (
+                <React.Fragment key={cat}>
+                  <div className={styles.categoryTitle}>{cat}</div>
+                  {roles.map(renderRoleItem)}
+                </React.Fragment>
+              )
+            })}
+            
+            {Object.values(categorizedRoles).every(roles => roles.length === 0) && (
+              <div className={styles.emptyState}>Keine Rollen gefunden.</div>
+            )}
+          </>
+        ) : (
+          <>
+            {legacyRoleList.map(renderRoleItem)}
+          </>
         )}
 
         <ListItem className={styles.newRoleRow}>

@@ -1,65 +1,30 @@
-# Verifikationsreport
+# Codex Verification Report
 
-Quelle:
-- `docs/issues/ux-storyteller-improvements.md`
+Datum: 2026-03-08  
+Scope: Vollständige Neu-Verifikation auf aktuellem uncommitted Stand gegen `docs/issues/ux-storyteller-improvements.md`.
 
-## Ergebnis
-- Umsetzung gegen alle geforderten Punkte verifiziert, inkl. neuer Einstellungen-Toolbar und Feature-Flags.
-- Technische Projektchecks sind gruen (`lint`, `typecheck`, `test`, `build`).
+## Ergebnis gegen Akzeptanzkriterien
 
-## Abgleich gegen Akzeptanzkriterien
-
-- Effektliste priorisiert aktive und Default-Effekte: Erfuellt.
-  - Sortierung nach aktiv/default in `src/components/Play.tsx` (Zeilen 175-203).
-  - Default-Reihenfolge in `src/data/default-effect-definitions.ts` (Zeilen 19-35).
-
-- Klick auf Effektname + Effektbeschreibung toggelt den Effekt direkt: Erfuellt.
-  - Klickbarer Bereich fuer Name+Beschreibung mit Toggle in `src/components/Play.tsx` (Zeilen 819-847).
-  - Tastaturunterstuetzung (Enter/Space) in `src/components/Play.tsx` (Zeilen 828-834).
-
-- Nacht-Assistent ist dynamisch und fuer Tastatur bedienbar: Erfuellt.
-  - Dynamische Ermittlung aktiver Nachtrollen in `src/components/Play.tsx` (Zeilen 270-310).
-  - Dynamische Reihenfolge pro Nacht in `src/components/Play.tsx` (Zeilen 320-331).
-  - Bedienung ueber native Buttons/ARIA in `src/components/Play.tsx` (Zeilen 718-753).
-
-- Destruktive Aktionen haben Bestaetigung: Erfuellt (feature-flag-gesteuert fuer Zusatzdialoge).
-  - Zentrale Confirm-Logik in `src/components/Play.tsx` (Zeilen 377-383).
-  - Konkrete Confirm-Aufrufe z. B. Phasenwechsel/Eliminieren/Effekt loeschen in `src/components/Play.tsx` (Zeilen 569-589, 615-619, 852-856).
-  - Deck-/Rollen-Loeschen mit Confirm-Dialog in `src/components/Preparation.tsx` (Zeilen 282-304, 432-443) und `src/components/RolePicker.tsx` (Zeilen 251-258, 346-353, 436-447).
-
-- Keine `alert()`-Nutzung mehr in UI/Reducer: Erfuellt.
-  - Suche `rg -n "\\balert\\s*\\(" src -S` liefert keine Treffer.
-
-- Touch-Targets sind fuer mobile Bedienung vergroessert: Erfuellt.
-  - 44x44 Aktionsbuttons in `src/components/Play.module.css` (Zeilen 253-255).
-  - 44x44 Stepper-/Delete-Buttons in `src/components/RolePicker.module.css` (Zeilen 105-108, 247-250).
-
-- Hexe: `vergiftet` nicht permanent, Traenke je 1x, danach `Faehigkeit verbraucht`: Erfuellt.
-  - `vergiftet`/`geheilt` als `night` in `src/data/default-effect-definitions.ts` (Zeilen 4-5).
-  - Migration alter permanenter Effekte zu `night` in `src/reducers/game.ts` (Zeilen 511-530), Test in `src/reducers/game.effect-migration.test.ts` (Zeilen 9-21).
-  - 1x-Nutzung Gift/Heilung und Verbrauchsflags in `src/reducers/game.ts` (Zeilen 1116-1134).
-  - Automatisches `faehigkeit_weg` fuer Hexe in `src/reducers/game.ts` (Zeilen 1137-1143).
-  - Testabdeckung in `src/reducers/game.test.ts` (Zeilen 25-39).
-
-- Toolbar mit Einstellungs-Icon zur gezielten Aktivierung/Deaktivierung: Erfuellt.
-  - Einstellungs-Icon oben in `src/components/Toolbar.tsx` (Zeilen 70-76).
-  - Einstellungsdialog mit einzelnen Schaltern in `src/components/Toolbar.tsx` (Zeilen 79-106).
-
-- Zusatzdialoge ueber Feature-Flag steuerbar und standardmaessig deaktiviert (Default aus `config.ts`): Erfuellt.
-  - Default `confirmDialogs: false` in `src/config.ts` (Zeilen 12-17).
-  - Persistenz/Reset der Feature-Flags in `src/reducers/ui.ts` (Zeilen 40-49, 77-97).
-  - Auswertung des Flags in den betroffenen Komponenten (`Play`, `Preparation`, `RolePicker`).
+- Effektliste priorisiert aktive und Default-Effekte: erfüllt (`src/components/Play.tsx:180`, `src/components/Play.tsx:182`, `src/components/Play.tsx:190`, `src/reducers/ui.ts:44`).
+- Klick auf Effektname + Effektbeschreibung toggelt den Effekt direkt: erfüllt (`src/components/Play.tsx:859`, `src/components/Play.tsx:863`, `src/components/Play.tsx:888`).
+- Nacht-Assistent dynamisch und fuer Tastatur bedienbar: erfüllt (`src/components/Play.tsx:334`, `src/components/Play.tsx:752`, `src/components/Play.tsx:758`, `src/components/Play.tsx:782`, `src/components/Play.tsx:868`).
+- Destruktive Aktionen mit Bestaetigung (flag-gesteuert): erfüllt (`src/components/Play.tsx:391`, `src/components/Play.tsx:817`, `src/components/Preparation.tsx:442`, `src/components/RolePicker.tsx:458`).
+- Keine `alert()`-Nutzung in UI/Reducer: erfüllt (Code-Scan in `src/` ohne Treffer fuer `alert/confirm/prompt`).
+- Touch-Targets fuer mobile Bedienung vergroessert: erfüllt (`src/components/Play.module.css:253`, `src/components/Play.module.css:254`, `src/components/RolePicker.module.css:106`, `src/components/RolePicker.module.css:248`).
+- Hexe-Regeln (`vergiftet` nicht permanent, Traenke je 1x, danach `Fähigkeit verbraucht`): erfüllt (`src/data/default-effect-definitions.ts:4`, `src/data/default-effect-definitions.ts:5`, `src/reducers/game.ts:1227`, `src/reducers/game.ts:1230`, `src/reducers/game.ts:1245`).
+- Toolbar hat Einstellungs-Icon: erfüllt (`src/components/Toolbar.tsx:77`).
+- Zusatzdialoge per Feature-Flag steuerbar, default aus `config.ts` deaktiviert: erfüllt (`src/config.ts:13`, `src/components/Play.tsx:817`, `src/components/Preparation.tsx:442`, `src/components/RolePicker.tsx:458`).
+- Feature-Schalter orientieren sich an Fork-Unterschieden: erfüllt (`src/components/Toolbar.tsx:26`, `src/components/Toolbar.tsx:31`, `src/components/Toolbar.tsx:36`, `src/components/Toolbar.tsx:41`).
+- `Darkmode` und `Spielernamen` fest aktiv, nicht als abschaltbare Settings-Option: erfüllt (`src/components/Toolbar.tsx:19`, `src/reducers/ui.ts:42`, `src/reducers/ui.ts:43`, `src/reducers/ui.ts:87`).
+- Bei deaktiviertem `Nacht-Assistent & Fraktionen/Nachtschemata` dauerhaft Tag-Modus und kein Tag/Nacht-Wechsel: erfüllt (`src/components/Play.tsx:162`, `src/components/Play.tsx:418`, `src/components/Play.tsx:721`, `src/components/Play.tsx:733`, `src/reducers/game.ts:1064`).
+- In diesem Modus alle Statuseffekte auswählbar, Dauerinfos im Effekt-Picker ausgeblendet: erfüllt (`src/components/Play.tsx:210`, `src/components/Play.tsx:235`, `src/components/Play.tsx:882`, `src/components/Play.tsx:888`).
+- In diesem Modus fehlt beim manuellen Effekt-Anlegen die Dauer-Auswahl; intern immer `permanent`: erfüllt (`src/components/Play.tsx:550`, `src/components/Play.tsx:558`, `src/components/Play.tsx:925`, `src/components/Play.tsx:578`).
 
 ## Projekt-Checks
 
-- `npm run lint`: erfolgreich.
-- `npm run typecheck`: erfolgreich.
-- `npm run test`: erfolgreich.
-  - Test Suites: 4 passed, 4 total.
-  - Tests: 7 passed, 7 total.
-- `npm run build`: erfolgreich (`Compiled successfully.`).
-
-## Findings
-- Keine Findings.
+- `npm run lint`: PASS
+- `npm run typecheck`: PASS
+- `npm test -- --watchAll=false`: PASS (5/5 Suites, 16/16 Tests)
+- `npm run build`: PASS
 
 0 Findings

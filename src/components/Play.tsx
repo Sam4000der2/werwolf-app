@@ -2,7 +2,7 @@ import React from 'react'
 import { Fab, Icon, Page, List, ListItem, ListTitle, AlertDialog, Button, Dialog, Checkbox, Input } from 'react-onsenui'
 import { connect, ConnectedProps } from 'react-redux'
 
-import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID, advanceNightZero, advanceToDay, advanceToNight } from '../reducers/game'
+import { togglePlayerAlive, fullReset, togglePlayerEffect, createEffect, deleteEffect, generateEffectID, advanceNightZero, advanceToDay, advanceToNight, forceDayPhase } from '../reducers/game'
 import { navTo } from '../reducers/ui'
 import Toolbar from './Toolbar'
 import { availableIcons, defaultEffectOrder } from '../config'
@@ -21,7 +21,7 @@ const mapStateToProps = (state: RootState) => ({
   phase: state.game.phase,
 })
 
-const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, createEffect, deleteEffect, advanceNightZero, advanceToDay, advanceToNight }
+const mapDispatch = { togglePlayerAlive, fullReset, navTo, togglePlayerEffect, createEffect, deleteEffect, advanceNightZero, advanceToDay, advanceToNight, forceDayPhase }
 const connector = connect(mapStateToProps, mapDispatch)
 
 type PlayProps = ConnectedProps<typeof connector>
@@ -136,6 +136,7 @@ const Play = ({
   advanceNightZero,
   advanceToDay,
   advanceToNight,
+  forceDayPhase,
 }: PlayProps) => {
   const [endAlertIsOpen, setEndAlertIsOpen] = React.useState(false)
   const [playerDetailsAreOpen, setPlayerDetailsAreOpen] = React.useState(false)
@@ -157,9 +158,13 @@ const Play = ({
 
   const selectedPlayerData = players[selectedPlayer]
   const confirmDialogsEnabled = featureFlags.confirmDialogs
-  const narratorAssistantEnabled = featureFlags.narratorAssistant
+  const advancedNightAssistantEnabled = featureFlags.advancedNightAssistant
+  const permanentDayModeEnabled = !advancedNightAssistantEnabled
+  const defaultStatusEffectsEnabled = featureFlags.defaultStatusEffects
   const persistentPlayerNamesEnabled = featureFlags.persistentPlayerNames
   const prioritizeStatusEffectsEnabled = featureFlags.prioritizeStatusEffects
+  const dayCountLabel = phase.dayCount > 0 ? phase.dayCount : 1
+  const isDayPhase = permanentDayModeEnabled || phase.mode === "day"
   const defaultEffectPriorityByID = React.useMemo(() => {
     const mappedPriority: { [effectID: string]: number } = {}
     defaultEffectOrder.forEach((effectID, index) => {
@@ -202,28 +207,34 @@ const Play = ({
     })
   ), [availableEffects, selectedPlayerEffectIDs, defaultEffectPriorityByID, prioritizeStatusEffectsEnabled])
 
-  const allowedEffectDurations = React.useMemo(() => (
-    new Set<EffectDuration>(getAllowedEffectDurations(phase.mode, phase.nightCount))
-  ), [phase.mode, phase.nightCount])
-
-  const selectableEffectIDs = React.useMemo(() => (
-    sortedEffectIDs.filter(effectID => allowedEffectDurations.has(availableEffects[effectID]?.duration))
-  ), [sortedEffectIDs, availableEffects, allowedEffectDurations])
+  const selectableEffectIDs = React.useMemo(() => {
+    if (!advancedNightAssistantEnabled) {
+      return sortedEffectIDs
+    }
+    const allowedEffectDurations = new Set<EffectDuration>(getAllowedEffectDurations(phase.mode, phase.nightCount))
+    return sortedEffectIDs.filter(effectID => allowedEffectDurations.has(availableEffects[effectID]?.duration))
+  }, [advancedNightAssistantEnabled, sortedEffectIDs, availableEffects, phase.mode, phase.nightCount])
 
   const hasWitchInGame = React.useMemo(() => (
     players.some(player => player.role === witchRoleID)
   ), [players])
 
   const witchPotionStatusHint = React.useMemo(() => {
-    if (!hasWitchInGame) {
+    if (!defaultStatusEffectsEnabled || !hasWitchInGame) {
       return ""
     }
     const poisonStatus = witchPotions.poisonUsed ? "verbraucht" : "verfügbar"
     const healStatus = witchPotions.healUsed ? "verbraucht" : "verfügbar"
     return `Hexe: Gifttrank ${poisonStatus}, Heiltrank ${healStatus}.`
-  }, [hasWitchInGame, witchPotions.poisonUsed, witchPotions.healUsed])
+  }, [defaultStatusEffectsEnabled, hasWitchInGame, witchPotions.poisonUsed, witchPotions.healUsed])
 
   const effectPickerHint = React.useMemo(() => {
+    if (!defaultStatusEffectsEnabled) {
+      return "Default-Statuseffekte sind deaktiviert."
+    }
+    if (!advancedNightAssistantEnabled) {
+      return "Nacht-Assistent deaktiviert: alle Effekte sind jederzeit auswählbar."
+    }
     if (phase.mode === "day") {
       return "Tagsüber lassen sich nur permanente Effekte aktivieren."
     }
@@ -231,7 +242,7 @@ const Play = ({
       return "In Nacht 0 sind nur permanente Effekte auswählbar."
     }
     return "Ab Nacht 1 sind nur Nacht- und Nächster-Tag-Effekte aktivierbar."
-  }, [phase.mode, phase.nightCount])
+  }, [defaultStatusEffectsEnabled, advancedNightAssistantEnabled, phase.mode, phase.nightCount])
 
   const isEffectSelectionDisabled = React.useCallback((effectID: string, isActive: boolean) => {
     if (isActive) {
@@ -247,6 +258,9 @@ const Play = ({
   }, [witchPotions.healUsed, witchPotions.poisonUsed])
 
   const describeEffect = React.useCallback((effectID: string, duration: EffectDuration): string => {
+    if (!advancedNightAssistantEnabled && effectID !== witchPoisonEffectID && effectID !== witchHealEffectID) {
+      return ""
+    }
     if (effectID === witchPoisonEffectID) {
       return "Hexe: Gifttrank (einmalig). Das Ziel stirbt bei Tagbeginn."
     }
@@ -254,7 +268,7 @@ const Play = ({
       return "Hexe: Heiltrank (einmalig)."
     }
     return `Dauer: ${effectDurationLabel(duration)}`
-  }, [])
+  }, [advancedNightAssistantEnabled])
 
   const toggleSelectedPlayerEffect = React.useCallback((effectID: string) => {
     if (!selectedPlayerData) {
@@ -402,6 +416,16 @@ const Play = ({
   }
 
   React.useEffect(() => {
+    if (!permanentDayModeEnabled) {
+      return
+    }
+    if (phase.mode === "day" && phase.dayCount >= 1) {
+      return
+    }
+    forceDayPhase()
+  }, [permanentDayModeEnabled, phase.mode, phase.dayCount, forceDayPhase])
+
+  React.useEffect(() => {
     setDoneSteps(new Set())
     setCurrentNightStepIndex(0)
   }, [phase.mode, phase.nightCount])
@@ -522,11 +546,16 @@ const Play = ({
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
-    const defaultDuration = effectDurationOptions[0]?.duration || "permanent"
-    const rawDuration = formData.get("newEffectDuration")
-    const newEffectDuration = (rawDuration === "night" || rawDuration === "next_day" || rawDuration === "permanent")
-      ? rawDuration
-      : defaultDuration
+    const defaultDuration: EffectDuration = effectDurationOptions[0]?.duration || "permanent"
+    const newEffectDuration: EffectDuration = advancedNightAssistantEnabled
+      ? (() => {
+        const rawDuration = formData.get("newEffectDuration")
+        if (rawDuration === "night" || rawDuration === "next_day" || rawDuration === "permanent") {
+          return rawDuration
+        }
+        return defaultDuration
+      })()
+      : "permanent"
     const effectIcon = String(formData.get("newEffectIcon") || "").trim() || (
       newEffectDuration === "night" ? "fa-moon" : newEffectDuration === "next_day" ? "fa-sun" : "fa-heart"
     )
@@ -590,8 +619,8 @@ const Play = ({
 
   const renderPlayerCard = (player: Player, playerID: number) => {
     const isDead = !player.alive
-    const roleWakesTonight = phase.mode === "night" && wakingRoleIDsTonight.has(player.role)
-    const roleHasAdditionalWakeTonight = phase.mode === "night" && additionalActiveRoleIDsTonight.has(player.role)
+    const roleWakesTonight = advancedNightAssistantEnabled && phase.mode === "night" && wakingRoleIDsTonight.has(player.role)
+    const roleHasAdditionalWakeTonight = advancedNightAssistantEnabled && phase.mode === "night" && additionalActiveRoleIDsTonight.has(player.role)
     
     return (
       <div 
@@ -645,7 +674,7 @@ const Play = ({
               <span className={styles.additionalWakeBadge}>Aktiv</span>
             )}
             
-            {phase.mode === "day" && persistentPlayerNamesEnabled && (
+            {isDayPhase && persistentPlayerNamesEnabled && (
               <button
                 className={styles.playerNameEditButton}
                 onClick={() => openPlayerNameDialog(playerID)}
@@ -684,21 +713,32 @@ const Play = ({
       <section className={styles.phasePanel}>
         <div className={styles.phaseHeader}>
           <div className={styles.phaseHeaderLeft}>
-            <span className={`${styles.phaseBadge} ${phase.mode === "night" ? styles.phaseNight : styles.phaseDay}`}>
-              {phase.mode === "night" ? `Nacht ${phase.nightCount}` : `Tag ${phase.dayCount}`}
+            <span className={`${styles.phaseBadge} ${isDayPhase ? styles.phaseDay : styles.phaseNight}`}>
+              {isDayPhase ? `Tag ${dayCountLabel}` : `Nacht ${phase.nightCount}`}
             </span>
             <span className={styles.phaseCounter}>Status: {countAlivePlayers(players)} / {players.length} am Leben</span>
           </div>
-          <Button
-            modifier="quiet"
-            onClick={advancePhase}
-          >
-            {phase.mode === "night" ? "Nacht beenden" : "Tag beenden"}
-          </Button>
+          {advancedNightAssistantEnabled && (
+            <Button
+              modifier="quiet"
+              onClick={advancePhase}
+            >
+              {phase.mode === "night" ? "Nacht beenden" : "Tag beenden"}
+            </Button>
+          )}
         </div>
 
-        {phase.mode === "night" ? (
-          <p className={styles.sectionHint}>Rollen, die in dieser Nacht aufwachen, sind markiert.</p>
+        {!advancedNightAssistantEnabled ? (
+          <p className={styles.sectionHint}>
+            Nacht-Assistent deaktiviert: Das Spiel läuft dauerhaft im Tag-Modus.
+          </p>
+        ) : phase.mode === "night" ? (
+          <p className={styles.sectionHint}>
+            {advancedNightAssistantEnabled
+              ? "Rollen, die in dieser Nacht aufwachen, sind markiert."
+              : "Nachtphase läuft."
+            }
+          </p>
         ) : (
           <p className={styles.sectionHint}>
             {persistentPlayerNamesEnabled
@@ -709,7 +749,7 @@ const Play = ({
         )}
       </section>
 
-      {phase.mode === "night" && narratorAssistantEnabled && tonightOrder.length > 0 && (
+      {phase.mode === "night" && advancedNightAssistantEnabled && tonightOrder.length > 0 && (
         <section className={styles.narratorAssistant}>
           <div className={styles.narratorTitle}>
             <Icon icon="fa-list-check" /> Erzähler-Assistent (Nacht-Reihenfolge)
@@ -834,16 +874,20 @@ const Play = ({
                   }}
                   aria-label={`${effect.name} auswählen`}
                 >
-                  <div className={styles.effectNameLine}>
-                    <span className="icon-text">
-                      <Icon icon={effect.icon} />
-                      {effect.name}
-                    </span>
+                <div className={styles.effectNameLine}>
+                  <span className="icon-text">
+                    <Icon icon={effect.icon} />
+                    {effect.name}
+                  </span>
+                  {advancedNightAssistantEnabled && (
                     <span className={`${styles.effectDurationLabel} ${effectDurationClass(effect.duration)}`}>
                       {effectDurationLabel(effect.duration)}
                     </span>
-                  </div>
+                  )}
+                </div>
+                {effectDescription.length > 0 && (
                   <p className={styles.effectDescription}>{effectDescription}</p>
+                )}
                 </div>
                 <button
                   className="right button--dialog"
@@ -878,19 +922,21 @@ const Play = ({
         <form onSubmit={submitNewEffect}>
           <div className="effect-form-wrapper">
             <Input name="newEffectName" inputId="new_effect" modifier="material" placeholder="Name des Effekts" autocomplete="off" float style={{width: '100%'}} />
-            <div className={styles.durationPicker}>
-              {effectDurationOptions.map((option, index) => (
-                <label key={option.duration}>
-                  <input
-                    type="radio"
-                    name="newEffectDuration"
-                    value={option.duration}
-                    defaultChecked={index === 0}
-                  />
-                  {` ${option.label}`}
-                </label>
-              ))}
-            </div>
+            {advancedNightAssistantEnabled && (
+              <div className={styles.durationPicker}>
+                {effectDurationOptions.map((option, index) => (
+                  <label key={option.duration}>
+                    <input
+                      type="radio"
+                      name="newEffectDuration"
+                      value={option.duration}
+                      defaultChecked={index === 0}
+                    />
+                    {` ${option.label}`}
+                  </label>
+                ))}
+              </div>
+            )}
             <div className="icon-list">
               {availableIcons.length > 0 ? availableIcons.map(iconID => {
                 return (

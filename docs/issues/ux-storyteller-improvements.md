@@ -29,3 +29,8 @@ Die Bedienung in Vorbereitung und Spielleitung war an einigen Stellen fehleranfa
 - Hexe: `vergiftet` ist kein permanenter Effekt, Gift-/Heiltrank sind jeweils nur 1x nutzbar, danach bekommt die Hexe automatisch `Fähigkeit verbraucht`.
 - Oben in der Toolbar gibt es ein Einstellungs-Icon zur gezielten Aktivierung/Deaktivierung von Funktionen.
 - Zusatzdialoge sind ueber Feature-Flag steuerbar und standardmaessig deaktiviert (Default aus `config.ts`).
+- Feature-Schalter orientieren sich an den Fork-Unterschieden: `Decks & Backups`, `Default-Statuseffekte`, `Nacht-Assistent & Fraktionen/Nachtschemata`, `Rollen-Kategorien`.
+- `Darkmode` und `Spielernamen` bleiben fest aktiv verfuegbar und sind nicht als abschaltbare Option in den Einstellungen.
+- Wenn `Nacht-Assistent & Fraktionen/Nachtschemata` deaktiviert ist, ist die Spielleitung dauerhaft im Tag-Modus und Tag/Nacht-Wechsel sind ausgeblendet.
+- In diesem Modus sind alle Statuseffekte auswaehlbar; Dauerinformationen werden im Effekt-Picker ausgeblendet.
+- Beim manuellen Anlegen eines Effekts fehlt in diesem Modus die Dauer-Auswahl; intern wird immer `permanent` gespeichert.

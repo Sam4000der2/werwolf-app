@@ -7,17 +7,19 @@ import Preparation from './components/Preparation';
 import Deal from './components/Deal';
 import { connect, ConnectedProps } from 'react-redux';
 import Play from './components/Play';
+import { setDefaultEffectsEnabled } from './reducers/game';
 
 
 const mapStateToProps = (state: RootState) => ({
   currentPage: state.ui.currentPage,
   themeMode: state.ui.themeMode,
+  featureFlags: state.ui.featureFlags,
 })
-const connector = connect(mapStateToProps)
+const connector = connect(mapStateToProps, { setDefaultEffectsEnabled })
 const forkRepoURL = "https://github.com/Sam4000der2/werwolf-app"
 const themeColorMetaSelector = 'meta[name="theme-color"]'
 
-const App = ({ currentPage, themeMode }: ConnectedProps<typeof connector>) => {
+const App = ({ currentPage, themeMode, featureFlags, setDefaultEffectsEnabled }: ConnectedProps<typeof connector>) => {
   React.useEffect(() => {
     if (typeof window === "undefined") {
       return
@@ -54,6 +56,10 @@ const App = ({ currentPage, themeMode }: ConnectedProps<typeof connector>) => {
     media.addListener(handleSystemThemeChange)
     return () => media.removeListener(handleSystemThemeChange)
   }, [themeMode])
+
+  React.useEffect(() => {
+    setDefaultEffectsEnabled(featureFlags.defaultStatusEffects)
+  }, [featureFlags.defaultStatusEffects, setDefaultEffectsEnabled])
 
   let content
   switch (currentPage) {

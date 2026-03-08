@@ -79,7 +79,11 @@ declare interface RootState {
 
 declare type AppFeatureFlags = {
     confirmDialogs: boolean
-    narratorAssistant: boolean
+    deckBackups: boolean
+    defaultStatusEffects: boolean
+    advancedNightAssistant: boolean
+    categorizedRoleSorting: boolean
+    darkMode: boolean
     persistentPlayerNames: boolean
     prioritizeStatusEffects: boolean
 }

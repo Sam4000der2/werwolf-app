@@ -438,22 +438,27 @@ const toggleEffectOnRolePlayers = (
     roleID: string,
     effectID: string,
     enabled: boolean,
-): Player[] => (
-    players.map(player => {
+): Player[] => {
+    let hasChanges = false
+    const updatedPlayers = players.map(player => {
         if (normalizeRoleID(player.role) !== roleID) {
             return player
         }
 
         const hasEffect = player.effects.includes(effectID)
         if (enabled && !hasEffect) {
+            hasChanges = true
             return { ...player, effects: [...player.effects, effectID] }
         }
         if (!enabled && hasEffect) {
+            hasChanges = true
             return { ...player, effects: player.effects.filter(effect => effect !== effectID) }
         }
         return player
     })
-)
+
+    return hasChanges ? updatedPlayers : players
+}
 
 const persistCustomRoles = (customRoles: GameState["customRoles"]) => {
     safeLocalStorageSetItem(CUSTOM_ROLES_STORAGE_KEY, JSON.stringify(customRoles))
@@ -478,6 +483,8 @@ const persistSavedDecks = (savedDecks: SavedDeck[]) => {
 const persistEffects = (effects: GameState["availableEffects"]) => {
     safeLocalStorageSetItem(EFFECT_LIBRARY_STORAGE_KEY, JSON.stringify(effects))
 }
+
+const defaultEffectIDs = new Set(Object.keys(defaultEffects).map(normalizeRoleID))
 
 const loadSavedCustomRoles = (): GameState["customRoles"] => {
     const rawCustomRoles = safeLocalStorageGetItem(CUSTOM_ROLES_STORAGE_KEY)
@@ -1054,6 +1061,36 @@ const gameSlice = createSlice({
             }
         },
 
+        forceDayPhase(state): GameState {
+            if (state.phase.mode === "day" && state.phase.dayCount >= 1) {
+                return state
+            }
+
+            if (state.phase.mode === "night") {
+                const playersWithPoisonDeaths = applyPoisonDeaths(state.players)
+                const players = removeEffectsByDuration(playersWithPoisonDeaths, state.availableEffects, "night")
+
+                return {
+                    ...state,
+                    players,
+                    phase: {
+                        ...state.phase,
+                        mode: "day",
+                        dayCount: state.phase.dayCount + 1,
+                    },
+                }
+            }
+
+            return {
+                ...state,
+                phase: {
+                    ...state.phase,
+                    mode: "day",
+                    dayCount: Math.max(1, state.phase.dayCount),
+                },
+            }
+        },
+
         togglePlayerAlive(state, action: PayloadAction<number>): GameState {
             let playerID = action.payload
             if (!Number.isInteger(playerID) || playerID < 0 || playerID >= state.players.length) {
@@ -1080,6 +1117,77 @@ const gameSlice = createSlice({
             }
             persistEffects(availableEffects)
             return { ...state, availableEffects }
+        },
+
+        setDefaultEffectsEnabled(state, action: PayloadAction<boolean>): GameState {
+            const enabled = action.payload
+            if (enabled) {
+                let hasChanges = false
+                const availableEffects = { ...state.availableEffects }
+                Object.entries(defaultEffects).forEach(([effectID, effect]) => {
+                    const normalizedEffectID = normalizeRoleID(effectID)
+                    if (normalizedEffectID.length <= 0) {
+                        return
+                    }
+
+                    const normalizedDefaultEffect: Effect = {
+                        name: effect.name,
+                        icon: effect.icon,
+                        duration: effect.duration,
+                    }
+                    const existingEffect = availableEffects[normalizedEffectID]
+                    const differsFromDefault = !existingEffect
+                        || existingEffect.name !== normalizedDefaultEffect.name
+                        || existingEffect.icon !== normalizedDefaultEffect.icon
+                        || existingEffect.duration !== normalizedDefaultEffect.duration
+
+                    if (!differsFromDefault) {
+                        return
+                    }
+
+                    hasChanges = true
+                    availableEffects[normalizedEffectID] = normalizedDefaultEffect
+                })
+                const shouldHaveAbilitySpent = state.witchPotions.poisonUsed && state.witchPotions.healUsed
+                const players = toggleEffectOnRolePlayers(state.players, witchRoleID, abilitySpentEffectID, shouldHaveAbilitySpent)
+                if (!hasChanges && players === state.players) {
+                    return state
+                }
+                persistEffects(availableEffects)
+                return { ...state, availableEffects, players }
+            }
+
+            let effectsChanged = false
+            const availableEffects = Object.entries(state.availableEffects).reduce((mappedEffects, [effectID, effect]) => {
+                if (defaultEffectIDs.has(normalizeRoleID(effectID))) {
+                    effectsChanged = true
+                } else {
+                    mappedEffects[effectID] = effect
+                }
+                return mappedEffects
+            }, {} as GameState["availableEffects"])
+
+            let playersChanged = false
+            const players = state.players.map(player => {
+                const nextEffects = player.effects.filter(effectID => !defaultEffectIDs.has(normalizeRoleID(effectID)))
+                if (nextEffects.length !== player.effects.length) {
+                    playersChanged = true
+                    return { ...player, effects: nextEffects }
+                }
+                return player
+            })
+
+            if (!effectsChanged && !playersChanged) {
+                return state
+            }
+
+            persistEffects(effectsChanged ? availableEffects : state.availableEffects)
+
+            return {
+                ...state,
+                availableEffects: effectsChanged ? availableEffects : state.availableEffects,
+                players: playersChanged ? players : state.players,
+            }
         },
 
         deleteEffect(state, action: PayloadAction<string>): GameState {
@@ -1184,9 +1292,11 @@ export const {
     advanceNightZero,
     advanceToDay,
     advanceToNight,
+    forceDayPhase,
     togglePlayerAlive,
     fullReset,
     createEffect,
+    setDefaultEffectsEnabled,
     deleteEffect,
     togglePlayerEffect,
 } = actions
