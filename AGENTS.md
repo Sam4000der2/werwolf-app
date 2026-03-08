@@ -109,3 +109,9 @@ Das Projekt "werwolf-app" ist ein git Fork und dient der Hilfe für den Spiellei
 - In Commit-Body oder PR-Notes kurz notieren:
   - welche Checks gelaufen sind (Lint/Type/Tests)
   - welche Module betroffen waren
+
+## 7) MEMORY.md
+
+- Create a MEMORY.md file to remember everything useful. Keep adding to and maintaining this file.
+- Try to only note down the most important keywords.
+- The goal is to permanently preserve knowledge that may become important later on, beyond the boundaries of the current chat.
